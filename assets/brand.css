@@ -1,0 +1,241 @@
+/* TrainTimes brand layer: shared by every page (departures, map, account, Delay Repay).
+   One source of truth for type, colour roles and the site chrome, in the same spirit as
+   F1 INLAP's brand layer.
+
+   Direction: a signal box panel before first light. Carbon surfaces, lines you feel rather
+   than see, one signal teal (the colour of the map's roads), and a track-sleeper stripe as
+   the mark. Every time is set in Geist Mono with tabular figures, because times get
+   compared down a column.
+
+   Status colours (on time, late, very late) are DATA, never decoration.
+   Depth: borders only. Radius: 6px controls, 12px panels, full pill for buttons and chips.
+   Spacing base: 4px. Fonts: Geist and Geist Mono (SIL Open Font License, fonts/OFL.txt). */
+
+@font-face{font-family:"Geist";src:url(fonts/Geist-Variable.woff2) format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Geist Mono";src:url(fonts/GeistMono-Variable.woff2) format("woff2");font-weight:100 900;font-display:swap}
+
+:root{
+  --font-ui:"Geist",-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-num:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+
+  /* surfaces, darkest to lightest: a few points of lightness each, never a new hue */
+  --carbon:#0b0c0e;      /* page */
+  --panel:#121418;       /* panels */
+  --panel-up:#181b20;    /* raised: hover, popovers */
+  --inset:#08090b;       /* inputs */
+  --line:rgb(255 255 255 / .08);
+  --line-strong:rgb(255 255 255 / .15);
+
+  /* ink: primary, secondary, tertiary, muted */
+  --ink-1:#f0f2f4; --ink-2:#c2c7ce; --ink-3:#8d949d; --ink-4:#646b74;
+
+  /* the one signal colour. Dark label on it (--on-signal) 9.1:1; --signal-ink is the
+     same teal for small text on carbon (7.6:1). */
+  --signal:#2bb7cf; --signal-hover:#46c6db; --on-signal:#06181c; --signal-ink:#4cc7dc;
+
+  /* status: data only. Each passes 4.5:1 as text on --panel. */
+  --st-ok:#2fd67b; --st-late:#f5c518; --st-bad:#ff5a4f; --st-none:#7b838d;
+
+  --r-control:6px; --r-panel:12px; --r-pill:999px;
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  color-scheme:dark;
+}
+
+/* ---- light theme: follows the device unless the toggle chose one (html[data-theme],
+   set by the boot script in each page's <head> from localStorage "tt-theme"). ---- */
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --carbon:#f2f4f6;--panel:#ffffff;--panel-up:#f7f8fa;--inset:#f7f8fa;
+    --line:rgb(15 20 25 / .10);--line-strong:rgb(15 20 25 / .18);
+    --ink-1:#101418;--ink-2:#323a43;--ink-3:#56606b;--ink-4:#646e79;
+    --signal:#0a7a90;--signal-hover:#086a7d;--on-signal:#ffffff;--signal-ink:#08697c;
+    --st-ok:#13824a;--st-late:#946c00;--st-bad:#c8261c;--st-none:#6b7480;
+    color-scheme:light}
+}
+:root[data-theme="light"]{
+    --carbon:#f2f4f6;--panel:#ffffff;--panel-up:#f7f8fa;--inset:#f7f8fa;
+    --line:rgb(15 20 25 / .10);--line-strong:rgb(15 20 25 / .18);
+    --ink-1:#101418;--ink-2:#323a43;--ink-3:#56606b;--ink-4:#646e79;
+    --signal:#0a7a90;--signal-hover:#086a7d;--on-signal:#ffffff;--signal-ink:#08697c;
+    --st-ok:#13824a;--st-late:#946c00;--st-bad:#c8261c;--st-none:#6b7480;
+    color-scheme:light}
+
+/* ---- base ---- */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--carbon);color:var(--ink-1);font:400 15px/1.55 var(--font-ui);
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overflow-x:clip}
+a{color:inherit}
+h1,h2,h3{text-wrap:balance;margin:0}
+p{text-wrap:pretty}
+.mono,.num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+.muted{color:var(--ink-3)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+
+/* ---- the wordmark and its track-sleeper stripe ---- */
+.tt-mark{display:inline-flex;flex-direction:column;gap:5px;color:var(--ink-1);text-decoration:none;
+  font:750 14px/1 var(--font-ui);letter-spacing:.08em;white-space:nowrap}
+.tt-mark::after{content:"";display:block;height:3px;border-radius:2px;
+  background:repeating-linear-gradient(90deg,var(--signal) 0 7px,transparent 7px 10px)}
+
+/* ---- site nav: one line, 56px, sticky, on every page ---- */
+.tt-nav{position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line);
+  background:color-mix(in srgb,var(--carbon) 86%,transparent);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.tt-nav>div{max-width:1240px;margin:0 auto;height:56px;padding:0 16px;display:flex;align-items:center;gap:20px}
+.tt-nav nav{margin-left:auto;display:flex;align-items:center;gap:18px;min-width:0}
+.tt-nav nav a{font:500 14px/1 var(--font-ui);color:var(--ink-3);text-decoration:none;white-space:nowrap}
+.tt-nav nav a:hover,.tt-nav nav a[aria-current="page"]{color:var(--ink-1)}
+@media (max-width:520px){.tt-nav nav{gap:14px}.tt-nav nav a{font-size:13.5px}.hide-sm{display:none!important}}
+/* Narrow phones: tighten up so the settings gear always fits. */
+@media (max-width:420px){.tt-nav>div{gap:10px;padding:0 10px}.tt-nav nav{gap:11px}.tt-nav nav a{font-size:13px}
+  .tt-mark{font-size:12.5px;letter-spacing:.06em}}
+@media (max-width:350px){.tt-mark{display:none}.tt-nav nav{margin-left:0;flex:1;justify-content:space-between}}
+
+/* ---- footer ---- */
+.tt-foot{border-top:1px solid var(--line);color:var(--ink-4);font:400 12.5px/1.65 var(--font-ui);margin-top:48px}
+.tt-foot>div{max-width:760px;margin:0 auto;padding:24px 16px 40px}
+.tt-foot p{margin:0 0 6px;max-width:80ch}
+.tt-foot a{color:var(--ink-3)}
+
+/* ---- panels, buttons, chips, fields ---- */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-panel)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 18px;
+  border-radius:var(--r-pill);border:1px solid var(--line-strong);background:transparent;color:var(--ink-1);
+  font:600 14.5px/1 var(--font-ui);text-decoration:none;white-space:nowrap;cursor:pointer;
+  transition:transform .16s var(--ease-out),background-color .2s var(--ease-out),border-color .2s var(--ease-out)}
+.btn:hover{border-color:var(--ink-3)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn-primary{background:var(--signal);border-color:var(--signal);color:var(--on-signal)}
+.btn-primary:hover{background:var(--signal-hover);border-color:var(--signal-hover)}
+.btn-sm{height:34px;padding:0 13px;font-size:13.5px}
+.btn-danger{color:var(--st-bad)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:var(--r-pill);
+  border:1px solid var(--line-strong);background:transparent;color:var(--ink-2);
+  font:600 12.5px/1 var(--font-ui);cursor:pointer;white-space:nowrap;
+  transition:transform .16s var(--ease-out),background-color .2s var(--ease-out)}
+.chip:active{transform:scale(.96)}
+.chip[aria-pressed="true"],.chip.on{background:var(--ink-1);border-color:var(--ink-1);color:var(--carbon)}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field>span,.label{font:600 12.5px/1.2 var(--font-ui);color:var(--ink-3);letter-spacing:.01em}
+input[type=text],input[type=tel],input[type=time],input[type=password],select{
+  width:100%;height:42px;font:500 15px/1 var(--font-ui);padding:0 12px;border:1px solid var(--line-strong);
+  border-radius:var(--r-control);background:var(--inset);color:var(--ink-1)}
+input[type=time]{font-family:var(--font-num)}
+input::placeholder{color:var(--ink-4)}
+select{appearance:none;-webkit-appearance:none;padding-right:34px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),linear-gradient(135deg,var(--ink-3) 50%,transparent 50%);
+  background-position:calc(100% - 17px) 18px,calc(100% - 12px) 18px;background-size:5px 5px;background-repeat:no-repeat}
+
+/* alerts / notes */
+.note{padding:12px 14px;border-radius:var(--r-panel);border:1px solid var(--line-strong);
+  background:var(--panel);font-size:14px;color:var(--ink-2)}
+.note.error{border-color:color-mix(in srgb,var(--st-bad) 45%,transparent);color:var(--st-bad)}
+.note.ok{border-color:color-mix(in srgb,var(--st-ok) 45%,transparent);color:var(--st-ok)}
+.note a{color:var(--signal-ink)}
+
+/* status text */
+.st{font:600 13.5px/1.2 var(--font-ui);white-space:nowrap}
+.st-ok{color:var(--st-ok)} .st-late{color:var(--st-late)} .st-bad{color:var(--st-bad)} .st-none{color:var(--st-none)}
+
+/* skeleton rows while loading */
+.skel{height:84px;border-radius:var(--r-panel);border:1px solid var(--line);
+  background:linear-gradient(90deg,var(--panel) 0%,var(--panel-up) 50%,var(--panel) 100%);background-size:200% 100%}
+@media (prefers-reduced-motion:no-preference){.skel{animation:shimmer 1.4s linear infinite}}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* theme toggle: 40px icon button showing the theme you would switch TO */
+.theme-btn,.icon-btn{display:inline-grid;place-items:center;width:40px;height:40px;flex:none;border-radius:var(--r-pill);
+  border:0;background:none;color:var(--ink-3);cursor:pointer;padding:0;font-size:18px;
+  transition:background-color .15s var(--ease-out),color .15s var(--ease-out)}
+.theme-btn:hover,.icon-btn:hover,.icon-btn[aria-current="page"]{background:var(--panel);color:var(--ink-1)}
+.theme-btn:active,.icon-btn:active{transform:scale(.94)}
+.theme-btn .i-sun{display:none}
+:root[data-theme="dark"] .theme-btn .i-sun{display:inline}
+:root[data-theme="dark"] .theme-btn .i-moon{display:none}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .theme-btn .i-sun{display:inline}
+  :root:not([data-theme="light"]) .theme-btn .i-moon{display:none}
+}
+
+/* focus: visible on keyboard, never on click */
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.skip{position:absolute;left:12px;top:-60px;z-index:50;padding:10px 14px;border-radius:var(--r-control);
+  background:var(--signal);color:var(--on-signal);font:600 14px/1 var(--font-ui);text-decoration:none}
+.skip:focus{top:12px}
+
+/* private pages and controls are hidden on the published static copy */
+[data-static="1"]:not([data-api]) .private{display:none!important}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---- station picker (assets/picker.js) ---- */
+.picker{position:relative;display:block}
+.picker input{padding-right:40px}
+.picker-clear{position:absolute;right:4px;top:50%;transform:translateY(-50%);display:grid;place-items:center;
+  width:34px;height:34px;border:0;border-radius:var(--r-pill);background:none;color:var(--ink-3);cursor:pointer;font-size:15px}
+.picker-clear:hover{background:var(--panel-up);color:var(--ink-1)}
+.picker-list{grid-column:1 / -1;list-style:none;margin:2px 0 0;padding:4px 0;max-height:280px;overflow-y:auto;
+  border:1px solid var(--line-strong);border-radius:var(--r-control);background:var(--panel);
+  overscroll-behavior:contain}
+.picker-list li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 12px;
+  cursor:pointer;font-size:14.5px;color:var(--ink-1)}
+.picker-list li:hover,.picker-list li[aria-selected="true"]{background:var(--panel-up)}
+.picker-list li.current{font-weight:650}
+.picker-list li.current::after{content:"Current";margin-left:auto;font:500 11px/1 var(--font-ui);color:var(--signal-ink)}
+.picker-list small{font:500 12px/1 var(--font-num);color:var(--ink-4)}
+.picker-list .picker-note{cursor:default;color:var(--ink-3);font-size:13px}
+
+
+/* ---- a train's whole journey (assets/journey.js) ---- */
+.journey{margin-top:6px}
+.journey .where{font-size:12.5px;font-weight:600;color:var(--ink-1)}
+.journey .stops{list-style:none;margin:8px 0 2px;padding:0}
+.journey .stops li{position:relative;display:flex;justify-content:space-between;gap:10px;
+  padding:4px 0 4px 22px;border:0;cursor:default;font-size:13px;background:none;grid-template-columns:none;color:var(--ink-3)}
+.journey .stops li::before{content:"";position:absolute;left:4px;top:0;bottom:0;width:2px;background:var(--line-strong)}
+.journey .stops li:first-child::before{top:50%}
+.journey .stops li:last-child::before{bottom:50%}
+.journey .stops li::after{content:"";position:absolute;left:0;top:50%;width:10px;height:10px;margin-top:-5px;
+  box-sizing:border-box;background:var(--panel);border:2px solid var(--ink-4)}
+.journey .stops li.passed{color:var(--ink-2)}
+.journey .stops li.passed::after{background:var(--ink-3);border-color:var(--ink-3)}
+.journey .stops li.passed::before{background:var(--ink-3)}
+.journey .stops li.upcoming{color:var(--ink-1)}
+.journey .stops li.here,.journey .stops li.mine{font-weight:650;color:var(--ink-1)}
+.journey .stops li.here::after{background:var(--signal);border-color:var(--signal)}
+.journey .stops li.mine::after{border-color:var(--signal)}
+.journey .stops li.now{height:0;padding:0;overflow:visible}
+.journey .stops li.now::after{width:14px;height:14px;margin-top:-7px;left:-2px;border-radius:50%;
+  background:var(--c,var(--signal));border:2px solid #fff;box-shadow:0 0 0 1px var(--line-strong)}
+.journey .tm{font-family:var(--font-num);white-space:nowrap;text-align:right}
+.journey .tm s{color:var(--ink-4);margin-right:4px}
+.journey .tm .late{color:var(--st-late)} .journey .tm .ok{color:var(--st-ok)} .journey .tm .bad{color:var(--st-bad)}
+.journey .jplat{font-size:11px;color:var(--ink-4);margin-left:6px}
+.journey .note{font-size:12.5px;color:var(--ink-3);margin-top:4px}
+/* Refresh: fetch the latest now. Spins while loading. */
+.refresh-btn{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:var(--r-pill);
+  border:1px solid var(--line-strong);background:var(--panel);color:var(--ink-2);font:600 12.5px var(--font-ui);cursor:pointer;
+  vertical-align:middle}
+.refresh-btn:hover{color:var(--ink-1);border-color:var(--ink-3)}
+.refresh-btn:active{transform:scale(.96)}
+.refresh-btn i{font-size:15px}
+.refresh-btn.busy i{animation:tt-spin .8s linear infinite}
+@keyframes tt-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.refresh-btn.busy i{animation:none;opacity:.5}}
+
+/* Platforms (see platform.js): reported today, changed, likely from history. */
+.plat{font:500 12px/1 var(--font-num);color:var(--ink-3);border:1px solid var(--line-strong);
+  border-radius:var(--r-control);padding:4px 6px;white-space:nowrap}
+.plat.plat-live{color:var(--ink-1);font-weight:650;border-color:var(--ink-3)}
+.plat.plat-changed{color:var(--st-late);font-weight:650;border-color:currentColor}
+.plat.plat-likely{border-style:dashed;color:var(--ink-2)}
+.icon-btn{text-decoration:none;font-size:21px}
+.tt-nav nav .icon-btn{color:var(--ink-3);font-size:22px;flex:none;width:36px;height:36px}
+.tt-nav nav .icon-btn:hover,.tt-nav nav .icon-btn[aria-current="page"]{color:var(--ink-1)}
+/* The Live tab, in the blue of the wordmark's stripe. */
+.tt-nav nav a.nav-live,.tt-nav nav a.nav-live:hover,.tt-nav nav a.nav-live[aria-current="page"]{color:var(--signal)}
+.tt-nav nav a.nav-live[aria-current="page"]{font-weight:650}
