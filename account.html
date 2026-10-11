@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en" data-static="1" data-api="https://ians-mac-mini.tail9eb485.ts.net:8443">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0c0e">
+<title>Your account | TrainTimes</title>
+<script>try{var t=localStorage.getItem("tt-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preload" href="assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/brand.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<script src="assets/theme.js" defer></script>
+<script src="assets/settings.js"></script>
+<script src="assets/accounts.js"></script>
+<script src="assets/picker.js"></script>
+<style>
+/* Account. Settings form on the shared brand layer. Dials: VARIANCE 3, MOTION 3, DENSITY 5. */
+#main{padding-top:32px;max-width:600px}
+#title{font-size:clamp(28px,6vw,36px);letter-spacing:-.035em;font-weight:700;line-height:1.05}
+.intro{color:var(--ink-3);margin:8px 0 0;max-width:52ch}
+h2{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-panel);padding:18px;margin:14px 0}
+.card>p.muted,.card .muted{font-size:13.5px;margin:4px 0 0}
+.sub{border:1px solid var(--line);border-radius:var(--r-panel);padding:14px;margin:14px 0 0;background:var(--carbon)}
+label{display:block;font:600 12.5px/1.2 var(--font-ui);color:var(--ink-3);margin:14px 0 6px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.files{list-style:none;margin:12px 0 0;padding:0}
+.files li{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.files li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.files li small{color:var(--ink-4)}
+.files a.button{display:inline-flex;align-items:center;height:32px;padding:0 12px;border:1px solid var(--line-strong);
+  border-radius:var(--r-control);font:600 13px var(--font-ui);color:var(--ink-1);text-decoration:none}
+@media (max-width:420px){.row2{grid-template-columns:1fr}}
+.days{display:flex;gap:6px;flex-wrap:wrap}
+.days label,.check{display:inline-flex;align-items:center;gap:8px;margin:0;height:32px;padding:0 12px;
+  border:1px solid var(--line-strong);border-radius:var(--r-pill);cursor:pointer;
+  font:600 12.5px/1 var(--font-ui);color:var(--ink-2)}
+.days input{display:none}
+.days label:has(input:checked){background:var(--ink-1);color:var(--carbon);border-color:var(--ink-1)}
+.check{height:auto;padding:8px 14px;color:var(--ink-1)}
+.times{max-height:260px;overflow-y:auto;border:1px solid var(--line-strong);border-radius:var(--r-control);background:var(--inset)}
+.times label{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:10px;align-items:baseline;margin:0;
+  padding:9px 12px;border-top:1px solid var(--line);cursor:pointer;font:400 13.5px/1.35 var(--font-ui);color:var(--ink-1)}
+.times label:first-child{border-top:0}
+.times b{font:600 14px/1 var(--font-num)}
+.times .runs{font:500 12px/1 var(--font-num);color:var(--ink-4);letter-spacing:.08em}
+.times .muted{color:var(--ink-3)}
+main button{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 18px;
+  border-radius:var(--r-pill);border:1px solid var(--line-strong);background:transparent;color:var(--ink-1);
+  font:600 14.5px/1 var(--font-ui);cursor:pointer;white-space:nowrap;
+  transition:transform .16s var(--ease-out),background-color .2s var(--ease-out),border-color .2s var(--ease-out)}
+main button:hover{border-color:var(--ink-3)}
+main button:active{transform:scale(.97)}
+main button:disabled{opacity:.55}
+main button.primary{background:var(--signal);border-color:var(--signal);color:var(--on-signal)}
+main button.primary:hover{background:var(--signal-hover)}
+main button.small{height:32px;padding:0 12px;font-size:13px}
+main button.danger{color:var(--st-bad)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.tabs{display:flex;gap:8px;margin:20px 0 0}
+.tabs button[aria-pressed="true"]{background:var(--ink-1);color:var(--carbon);border-color:var(--ink-1)}
+#msg{display:none;margin:16px 0 0;padding:12px 14px;border-radius:var(--r-panel);border:1px solid var(--line-strong);font-size:14px}
+#msg.error{display:block;border-color:color-mix(in srgb,var(--st-bad) 45%,transparent);color:var(--st-bad)}
+#msg.ok{display:block;border-color:color-mix(in srgb,var(--st-ok) 45%,transparent);color:var(--st-ok)}
+details summary{cursor:pointer;font:600 13.5px/1.3 var(--font-ui);color:var(--signal-ink);margin-top:14px}
+ol{padding-left:20px;margin:8px 0}
+.ticked{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.ticked b{font-family:var(--font-num)}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.head b{font-size:14.5px}
+.commute-pick{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:end;margin-top:6px}
+.commute-pick label{margin-top:0}
+.commute-pick > button{margin-bottom:4px}
+.leg .leg-title{font-size:15px}
+.tube-lines{display:flex;flex-wrap:wrap;gap:6px 12px;margin:4px 0 8px}
+.chip-check{display:inline-flex;align-items:center;gap:6px;font-size:13.5px}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to your account</a>
+<header class="tt-nav">
+  <div>
+    <a class="tt-mark" href="index.html" aria-label="TrainTimes departures">TRAINTIMES</a>
+    <nav aria-label="Main">
+      <a class="nav-live" href="now.html">Live</a>
+      <a href="index.html">Tracker</a>
+      <a href="map.html">Map</a>
+      <a href="history.html">Delays</a>
+      <a class="icon-btn settings-link" href="settings.html" aria-current="page" aria-label="Settings" title="Settings">
+        <i class="ph ph-gear-six" aria-hidden="true"></i></a>
+    </nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+  <h1 id="title">Your train alerts</h1>
+  <p class="intro">Your commute, your Delay Repay tracker, and (if you like) messages about your trains on Telegram or WhatsApp: before you travel, when something goes
+    wrong at your stations, and a summary each evening.</p>
+  <div id="msg"></div>
+
+  <!-- Logged out -->
+  <section id="signedout" hidden>
+    <div class="tabs">
+      <button type="button" data-tab="login" aria-pressed="true">Log in</button>
+      <button type="button" data-tab="create" aria-pressed="false">Create account</button>
+    </div>
+    <form id="loginform" class="card">
+      <label for="l-user">Username</label>
+      <input type="text" id="l-user" autocomplete="username" autocapitalize="none" required>
+      <label for="l-pass">Password</label>
+      <input type="password" id="l-pass" autocomplete="current-password" required>
+      <div class="actions"><button type="submit" class="primary">Log in</button></div>
+    </form>
+  </section>
+
+  <!-- The account form: creating one, or editing yours -->
+  <form id="form" hidden>
+    <div class="card">
+      <h2>You</h2>
+      <label for="name">Name</label>
+      <input type="text" id="name" autocomplete="given-name" required>
+      <div class="row2">
+        <div><label for="username">Username</label>
+          <input type="text" id="username" autocomplete="username" autocapitalize="none"></div>
+        <div><label for="password" id="passlabel">Password</label>
+          <input type="password" id="password" autocomplete="new-password"></div>
+      </div>
+      <p class="muted" id="passnote" hidden>Leave the password empty to keep it. Changing it logs
+        you out on other devices.</p>
+    </div>
+
+    <div class="card" id="tgcard">
+      <h2>Where alerts go <span class="muted" style="font-weight:500;font-size:13px">(optional)</span></h2>
+      <div id="tg">
+        <p class="muted" id="tg-status">Telegram is the most reliable way to get alerts. Install
+          the free Telegram app, then connect it here.</p>
+        <div class="actions">
+          <button type="button" class="primary" id="tg-connect">Connect Telegram</button>
+          <button type="button" id="tg-disconnect" hidden>Disconnect</button>
+        </div>
+        <p class="muted" id="tg-new" hidden>Create your account first, then tap Connect Telegram.</p>
+      </div>
+      <details id="others">
+        <summary id="others-summary">Or use WhatsApp or ntfy</summary>
+      <details id="howto">
+        <summary>Setting up WhatsApp (2 minutes)</summary>
+        <ol class="muted">
+          <li>Get CallMeBot's WhatsApp number from
+            <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank"
+               rel="noopener">callmebot.com</a> and add it to your contacts.</li>
+          <li>Send it: <b>I allow callmebot to send me messages</b></li>
+          <li>It replies with your key. Enter it below with your number.</li>
+        </ol>
+      </details>
+      <div class="row2">
+        <div><label for="phone">WhatsApp number</label>
+          <input type="tel" id="phone" placeholder="+447700900123"></div>
+        <div><label for="apikey">CallMeBot key</label>
+          <input type="text" id="apikey" inputmode="numeric" placeholder="1234567"></div>
+      </div>
+      <details>
+        <summary>Or use the ntfy app instead</summary>
+        <label for="ntfy">ntfy topic</label>
+        <input type="text" id="ntfy" placeholder="a-private-name-only-you-know">
+      </details>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Your departure board</h2>
+      <p class="muted">The stations the board opens on.</p>
+      <div class="row2">
+        <div><label for="b-from">From</label><select id="b-from"></select></div>
+        <div><label for="b-to">To</label><select id="b-to"></select></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="head"><h2>Station alerts</h2>
+        <button type="button" class="small" id="add-station">+ Add</button></div>
+      <p class="muted">A message when any train at a station is cancelled or running late, during
+        the hours you choose.</p>
+      <div id="stations"></div>
+    </div>
+
+    <div class="card" id="commute">
+      <h2>Your commute</h2>
+      <p class="muted">Set home and work once, then tick your trains each way. You get a summary
+        before them, then a message if anything changes.</p>
+      <div class="commute-pick">
+        <div><label for="home">Home</label><input type="text" id="home" aria-label="Home station"></div>
+        <button type="button" class="small" id="commute-swap" title="Swap home and work"
+                aria-label="Swap home and work"><i class="ph ph-arrows-left-right" aria-hidden="true"></i> Swap</button>
+        <div><label for="work">Work</label><input type="text" id="work" aria-label="Work station"></div>
+        <ul class="picker-list" id="home-list"></ul>
+        <ul class="picker-list" id="work-list"></ul>
+      </div>
+      <div id="legs"></div>
+    </div>
+
+    <div class="card">
+      <div class="head"><h2>Other regular trains</h2>
+        <button type="button" class="small" id="add-journey">+ Add</button></div>
+      <p class="muted">Any other trains you catch regularly. For a one-off, tap the bell on a train on
+        the <a href="index.html">departure board</a>.</p>
+      <div id="journeys"></div>
+    </div>
+
+    <div class="card" id="tickedcard" hidden>
+      <h2>Trains you've ticked</h2>
+      <p class="muted">A message an hour before each one leaves.</p>
+      <div id="ticked"></div>
+    </div>
+
+    <div class="card">
+      <h2>Evening summary</h2>
+      <label class="check"><input type="checkbox" id="summary-on"> Send me a summary each day at</label>
+      <input type="time" id="summary-at" value="20:00" style="max-width:140px;margin-top:6px">
+      <p class="muted">How your regular trains ran that day, and any you can claim Delay Repay
+        for.</p>
+    </div>
+
+    <div class="card">
+      <h2>Engineering works</h2>
+      <label class="check"><input type="checkbox" id="works-on" checked> Warn me the evening before, at</label>
+      <input type="time" id="works-at" value="19:00" style="max-width:140px;margin-top:6px">
+      <p class="muted">If the timetable shows your regular journeys cancelled, retimed or replaced
+        by buses the next day, with how often past works here overran.</p>
+    </div>
+
+    <div class="card" id="claimcard" hidden>
+      <h2>Claim details <span class="muted" style="font-weight:500;font-size:13px">(for Delay Repay)</span></h2>
+      <p class="muted">What claim forms ask about you and your ticket, so TrainTimes can fill them in. Kept on
+        the TrainTimes server only, for your account. Bank details aren't kept: the operator's form asks for those.</p>
+      <div class="row2">
+        <div><label for="c-first">First name</label><input id="c-first" autocomplete="given-name"></div>
+        <div><label for="c-last">Last name</label><input id="c-last" autocomplete="family-name"></div>
+        <div><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email"></div>
+        <div><label for="c-phone">Phone</label><input id="c-phone" type="tel" autocomplete="tel"></div>
+        <div><label for="c-addr1">Address</label><input id="c-addr1" autocomplete="address-line1"></div>
+        <div><label for="c-addr2">Address line 2</label><input id="c-addr2" autocomplete="address-line2"></div>
+        <div><label for="c-town">Town</label><input id="c-town" autocomplete="address-level2"></div>
+        <div><label for="c-postcode">Postcode</label><input id="c-postcode" autocomplete="postal-code"></div>
+      </div>
+      <label for="c-payment">How you'd like to be paid</label>
+      <select id="c-payment"><option value="">Choose</option></select>
+      <h2 style="margin-top:18px">Your ticket</h2>
+      <div class="row2">
+        <div><label for="c-ttype">Ticket type</label><select id="c-ttype"><option value="">Choose</option></select></div>
+        <div><label for="c-tnum">Ticket number, booking or smartcard</label><input id="c-tnum"></div>
+        <div><label for="c-tprice">Price paid (£)</label><input id="c-tprice" inputmode="decimal"></div>
+        <div><label for="c-railcard">Railcard (if any)</label><input id="c-railcard"></div>
+        <div><label for="c-tfrom">Valid from (season)</label><input id="c-tfrom" type="date"></div>
+        <div><label for="c-tuntil">Valid until (season)</label><input id="c-tuntil" type="date"></div>
+      </div>
+      <div class="actions"><button type="button" class="primary" id="c-save">Save claim details</button></div>
+      <h2 style="margin-top:18px">Tickets and documents</h2>
+      <p class="muted">Photos or PDFs of your tickets (8 MB each at most), ready to attach to a claim.</p>
+      <input type="file" id="c-files" accept="image/*,application/pdf" multiple>
+      <ul id="c-list" class="files"></ul>
+    </div>
+
+    <div class="card" id="codecard">
+      <label for="code">Invite code</label>
+      <input type="text" id="code" autocomplete="off">
+      <p class="muted">Ask the person who runs this for the code.</p>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="primary" id="save">Create account</button>
+      <button type="button" id="test" hidden>Send me a test message</button>
+      <button type="button" id="logout" hidden>Log out</button>
+      <button type="button" id="delete" class="danger" hidden>Delete my account</button>
+    </div>
+  </form>
+</main>
+<footer class="tt-foot">
+  <div>
+    <p>Messages are sent by this service's Telegram bot, or through CallMeBot (WhatsApp) or
+      ntfy using your own key or topic.
+      Your password is stored hashed on the computer that runs this service.</p>
+  </div>
+</footer>
+
+<template id="station-tpl">
+  <div class="sub station">
+    <div class="head"><b>Watch a station</b> <button type="button" class="small remove">Remove</button></div>
+    <div class="row2">
+      <div><label>Station</label><select class="st"></select></div>
+      <div><label>Trains going to</label><select class="towards"></select></div>
+    </div>
+    <div class="row2">
+      <div><label>From</label><input type="time" class="from" value="05:00"></div>
+      <div><label>Until</label><input type="time" class="until" value="09:30"></div>
+    </div>
+    <label>Days</label><div class="days"></div>
+    <label>Tell me when a train is</label>
+    <select class="delay">
+      <option value="5">5+ minutes late or cancelled</option>
+      <option value="10">10+ minutes late or cancelled</option>
+      <option value="15" selected>15+ minutes late or cancelled</option>
+      <option value="30">30+ minutes late or cancelled</option>
+    </select>
+  </div>
+</template>
+
+<template id="leg-tpl">
+  <div class="sub journey leg">
+    <div class="head"><b class="leg-title"></b></div>
+    <input type="hidden" class="from"><input type="hidden" class="to">
+    <label>Days</label><div class="days"></div>
+    <label>Trains <span class="muted">(departure times)</span></label>
+    <div class="times"><p class="muted" style="padding:8px 10px;margin:0">Set home and work above.</p></div>
+    <label>Start alerts at</label>
+    <input type="time" class="start">
+    <label>Time to get to the station <span class="muted">(minutes: your "time to leave" message comes this long before your first train, plus 10)</span></label>
+    <input type="number" class="travel" min="0" max="180" step="5" inputmode="numeric" style="max-width:140px">
+    <label class="then-label">Then on to <span class="muted">(optional: where you're finally going, e.g. Liverpool Street.
+      Your messages time the trip all the way, and tell you about trouble on the Underground on the way.)</span></label>
+    <input type="text" class="then" list="" autocomplete="off" placeholder="Station or stop">
+    <datalist class="then-list"></datalist>
+    <div class="way" hidden>
+      <label>Via <span class="muted">(optional: a station you walk to or change at, e.g. Baker Street)</span></label>
+      <input type="text" class="via" list="" autocomplete="off" placeholder="Station">
+      <datalist class="via-list"></datalist>
+      <label>Lines you use <span class="muted">(only these are planned with, and you're only told about trouble
+        when none of them can get you there)</span></label>
+      <div class="lines tube-lines"></div>
+    </div>
+  </div>
+</template>
+
+<template id="journey-tpl">
+  <div class="sub journey">
+    <div class="head"><b>Regular train</b>
+      <span><button type="button" class="small swap" title="Swap From and To">Swap</button>
+      <button type="button" class="small remove">Remove</button></span></div>
+    <div class="row2">
+      <div><label>From</label><select class="from"></select></div>
+      <div><label>To</label><select class="to"></select></div>
+    </div>
+    <label>Days</label><div class="days"></div>
+    <label>Trains <span class="muted">(departure times)</span></label>
+    <div class="times"><p class="muted" style="padding:8px 10px;margin:0">Pick your stations.</p></div>
+    <label>Start alerts at</label>
+    <input type="time" class="start">
+  </div>
+</template>
+
+<script>
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+let token = new URLSearchParams(location.search).get("token") || localStorage.getItem("tt_token");
+let stations = [];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const time = iso => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" });
+const dayOf = iso => new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Europe/London" });
+
+function message(text, ok) {
+  const box = $("msg");
+  box.textContent = text || "";
+  box.className = text ? (ok ? "ok" : "error") : "";
+  if (text) box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+// Everything here is the server's (see accounts.js: on the published site too).
+const api = (path, body) => accountJSON(path, body);
+
+const options = (selected, any) => (any ? `<option value="">${any}</option>` : "") +
+  stations.map(s => `<option value="${s.crs}"${s.crs === selected ? " selected" : ""}>${esc(s.name)}</option>`).join("");
+
+function daysPicker(node, days) {
+  node.innerHTML = DAY_NAMES.map((d, i) =>
+    `<label><input type="checkbox" value="${i}"${days[i] !== "-" ? " checked" : ""}>${d}</label>`).join("");
+}
+const readDays = node => DAY_NAMES.map((d, i) =>
+  node.querySelector(`input[value="${i}"]`).checked ? "MTWTFSS"[i] : "-").join("");
+
+// --- Station alerts ---------------------------------------------------------
+function addStation(w = {}) {
+  const node = $("station-tpl").content.firstElementChild.cloneNode(true);
+  node.querySelector(".st").innerHTML = options(w.station || "BCS");
+  node.querySelector(".towards").innerHTML = options(w.towards || "", "Anywhere");
+  if (w.from) node.querySelector(".from").value = w.from;
+  if (w.until) node.querySelector(".until").value = w.until;
+  node.querySelector(".delay").value = String(w.min_delay || 15);
+  daysPicker(node.querySelector(".days"), w.days || "MTWTF--");
+  node.querySelector(".remove").onclick = () => node.remove();
+  $("stations").append(node);
+}
+const readStations = () => [...document.querySelectorAll(".station")].map(n => ({
+  station: n.querySelector(".st").value, towards: n.querySelector(".towards").value || null,
+  from: n.querySelector(".from").value, until: n.querySelector(".until").value,
+  days: readDays(n.querySelector(".days")), min_delay: Number(n.querySelector(".delay").value),
+}));
+
+// --- Regular trains -----------------------------------------------------------
+function addJourney(j = {}) {
+  const node = $("journey-tpl").content.firstElementChild.cloneNode(true);
+  node.querySelector(".from").innerHTML = options(j.from || "BCS");
+  node.querySelector(".to").innerHTML = options(j.to || "MYB");
+  daysPicker(node.querySelector(".days"), j.days || "MTWTF--");
+  node.querySelector(".start").value = j.start || "";
+  if (j.start) node.querySelector(".start").dataset.touched = "1";
+  node.dataset.times = JSON.stringify(j.times || []);
+  node.querySelector(".from").onchange = node.querySelector(".to").onchange = () => loadTimes(node);
+  node.querySelector(".start").oninput = e => { e.target.dataset.touched = "1"; };
+  node.querySelector(".remove").onclick = () => node.remove();
+  node.querySelector(".swap").onclick = () => {
+    const f = node.querySelector(".from"), t = node.querySelector(".to");
+    [f.value, t.value] = [t.value, f.value];
+    node.dataset.times = "[]";
+    loadTimes(node);
+  };
+  $("journeys").append(node);
+  loadTimes(node);
+}
+
+// --- The commute: home and work, and trains each way ------------------------
+let commute = { home: null, work: null }, homePicker, workPicker;
+const LEGS = { to_work: "To work", to_home: "To home" };
+
+function legNode(label) {
+  let node = document.querySelector(`.leg[data-label="${label}"]`);
+  if (!node) {
+    node = $("leg-tpl").content.firstElementChild.cloneNode(true);
+    node.dataset.label = label;
+    node.dataset.times = "[]";
+    daysPicker(node.querySelector(".days"), "MTWTF--");
+    node.querySelector(".start").oninput = e => { e.target.dataset.touched = "1"; };
+    $("legs").append(node);
+  }
+  return node;
+}
+
+function setLeg(label, j = {}) {
+  const node = legNode(label);
+  node.querySelector(".travel").value = j.travel ?? (label === "to_home" ? 30 : 15);
+  setThen(node, label === "to_home" ? j.before : j.then);
+  setWay(node, label === "to_home" ? j.before : j.then);
+  if (j.days) daysPicker(node.querySelector(".days"), j.days);
+  if (j.start) { node.querySelector(".start").value = j.start; node.querySelector(".start").dataset.touched = "1"; }
+  if (j.times) node.dataset.times = JSON.stringify(j.times);
+}
+
+function showCommute() {
+  const { home, work } = commute;
+  homePicker?.set(home);
+  workPicker?.set(work);
+  for (const [label, [from, to]] of Object.entries({ to_work: [home, work], to_home: [work, home] })) {
+    const node = legNode(label);
+    node.querySelector(".from").value = from || "";
+    node.querySelector(".to").value = to || "";
+    const name = crs => stations.find(s => s.crs === crs)?.name || "";
+    node.querySelector(".leg-title").textContent =
+      from && to ? `${LEGS[label]}: ${name(from)} to ${name(to)}` : LEGS[label];
+    loadTimes(node);
+  }
+}
+
+// Swapping flips everything: each leg's trains, days and alert time go with it.
+function swapCommute() {
+  const read = label => {
+    const n = legNode(label);
+    return { times: JSON.parse(n.dataset.times || "[]"), days: readDays(n.querySelector(".days")),
+             start: n.querySelector(".start").value, travel: n.querySelector(".travel").value };
+  };
+  const toWork = read("to_work"), toHome = read("to_home");
+  commute = { home: commute.work, work: commute.home };
+  setLeg("to_work", toHome);
+  setLeg("to_home", toWork);
+  showCommute();
+}
+
+async function loadTimes(node) {
+  const from = node.querySelector(".from").value, to = node.querySelector(".to").value;
+  const box = node.querySelector(".times");
+  if (!from || !to || from === to) {
+    box.innerHTML = `<p class="muted" style="padding:8px 10px;margin:0">Pick your stations.</p>`;
+    return;
+  }
+  box.innerHTML = `<p class="muted" style="padding:8px 10px;margin:0">Loading trains…</p>`;
+  const { times = [] } = await api(`/api/times?from=${from}&to=${to}`);
+  const chosen = new Set(JSON.parse(node.dataset.times || "[]"));
+  box.innerHTML = times.map(t => `<label><input type="checkbox" value="${t.time}"${chosen.has(t.time) ? " checked" : ""}>` +
+      `<b>${t.time}</b><span>to ${esc(t.destination)}<br><span class="muted">arrives ${t.arrives}</span></span>` +
+      `<span class="runs" title="Days it runs this week">${t.runs}</span></label>`).join("")
+    || `<p class="muted" style="padding:8px 10px;margin:0">No direct trains found.</p>`;
+  box.querySelectorAll("input").forEach(i => i.onchange = () => {
+    node.dataset.times = JSON.stringify([...box.querySelectorAll("input:checked")].map(x => x.value));
+    const start = node.querySelector(".start");
+    const first = JSON.parse(node.dataset.times).sort()[0];
+    if (first && !start.dataset.touched) {        // 45 minutes before the first train
+      const [h, m] = first.split(":").map(Number), mins = (h * 60 + m - 45 + 1440) % 1440;
+      start.value = `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+    }
+  });
+}
+const readJourneys = () => [...document.querySelectorAll(".journey")]
+  .filter(n => JSON.parse(n.dataset.times || "[]").length && n.querySelector(".from").value
+               && n.querySelector(".to").value).map(n => ({
+    from: n.querySelector(".from").value, to: n.querySelector(".to").value,
+    times: JSON.parse(n.dataset.times), start: n.querySelector(".start").value,
+    days: readDays(n.querySelector(".days")),
+    ...(n.dataset.label ? { label: n.dataset.label } : {}),
+    ...(n.querySelector(".travel") && n.querySelector(".travel").value !== "" ? { travel: Number(n.querySelector(".travel").value) } : {}),
+    ...(n.dataset.then && n.querySelector(".then")?.value
+        ? { [n.dataset.label === "to_home" ? "before" : "then"]: readWay(n) } : {}),
+  }));
+
+// The way you go across London: via a station, on the lines you use.
+const TUBE_LINES = { bakerloo: "Bakerloo", central: "Central", circle: "Circle", district: "District",
+  "hammersmith-city": "Hammersmith & City", jubilee: "Jubilee", metropolitan: "Metropolitan", northern: "Northern",
+  piccadilly: "Piccadilly", victoria: "Victoria", "waterloo-city": "Waterloo & City", elizabeth: "Elizabeth line", dlr: "DLR" };
+function setWay(node, place) {
+  const way = node.querySelector(".way");
+  if (!way) return;
+  const box = way.querySelector(".lines");
+  if (!box.children.length) box.innerHTML = Object.entries(TUBE_LINES).map(([id, name]) =>
+    `<label class="chip-check"><input type="checkbox" value="${id}"> ${name}</label>`).join("");
+  const chosen = new Set(place?.lines || []);
+  box.querySelectorAll("input").forEach(c => { c.checked = chosen.has(c.value); });
+  const via = way.querySelector(".via");
+  via.value = place?.via?.name || "";
+  if (place?.via) node.dataset.via = JSON.stringify(place.via); else delete node.dataset.via;
+  wirePlace(via, way.querySelector(".via-list"), pick => {
+    if (pick) node.dataset.via = JSON.stringify(pick); else delete node.dataset.via;
+  });
+  way.hidden = !node.dataset.then;
+}
+function readWay(node) {
+  const place = JSON.parse(node.dataset.then);
+  const lines = [...node.querySelectorAll(".way .lines input:checked")].map(c => c.value);
+  return { id: place.id, name: place.name,
+           ...(node.dataset.via && node.querySelector(".via").value ? { via: JSON.parse(node.dataset.via) } : {}),
+           ...(lines.length ? { lines } : {}) };
+}
+// A station picked from TfL's stops as you type: onPick(place or null).
+function wirePlace(input, list, onPick) {
+  if (input.dataset.wired) return;
+  input.dataset.wired = "1";
+  list.id = `place-${Math.random().toString(36).slice(2)}`;
+  input.setAttribute("list", list.id);
+  let found = [], timer;
+  input.oninput = () => {
+    const pick = found.find(p => p.name === input.value);
+    onPick(pick || null);
+    if (pick) return;
+    clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (input.value.trim().length < 3) return;
+      found = (await api(`/api/places?q=${encodeURIComponent(input.value.trim())}`)).places || [];
+      list.innerHTML = found.map(p => `<option value="${p.name.replace(/"/g, "&quot;")}"></option>`).join("");
+    }, 300);
+  };
+}
+
+// Where you're finally going: picked from TfL's stops as you type.
+function setThen(node, then) {
+  const input = node.querySelector(".then");
+  if (!input) return;
+  // Going home, it's where you start from (across London), not where you end up.
+  if (node.dataset.label === "to_home") node.querySelector(".then-label").innerHTML =
+    `Coming from <span class="muted">(optional: where you start, e.g. Liverpool Street. Your messages say when to
+     leave there for each train, and about trouble on the Underground on the way.)</span>`;
+  if (then) { node.dataset.then = JSON.stringify({ id: then.id, name: then.name }); input.value = then.name; }
+  else { delete node.dataset.then; input.value = ""; }
+  wirePlace(input, node.querySelector(".then-list"), pick => {
+    if (pick) node.dataset.then = JSON.stringify(pick); else delete node.dataset.then;
+    const way = node.querySelector(".way");
+    if (way) way.hidden = !pick && !input.value;
+  });
+}
+
+// --- Ticked trains ------------------------------------------------------------
+async function loadTicked() {
+  const { watches = [] } = await api(`/api/watches?token=${encodeURIComponent(token)}`);
+  $("tickedcard").hidden = !watches.length;
+  $("ticked").innerHTML = watches.map(w =>
+    `<div class="ticked"><span>${dayOf(w.planned)} <b>${time(w.planned)}</b> from ` +
+    `${esc(stations.find(s => s.crs === w.station)?.name || w.station)}` +
+    `${w.origin ? ` <span class="muted">(${esc(w.origin)} train)</span>` : ""}</span>` +
+    `<button type="button" class="small" data-station="${w.station}" data-planned="${w.planned}">Remove</button></div>`).join("");
+  $("ticked").querySelectorAll("button").forEach(b => b.onclick = async () => {
+    await api("/api/unwatch", { token, station: b.dataset.station, planned: b.dataset.planned });
+    loadTicked();
+  });
+}
+
+// --- Showing and saving ------------------------------------------------------
+function showSignedOut(tab = "login") {
+  $("signedout").hidden = false;
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tab === tab)));
+  $("loginform").hidden = tab !== "login";
+  $("form").hidden = tab !== "create";
+  $("title").textContent = tab === "login" ? "Log in" : "Create an account";
+}
+
+// ---- Claim details and tickets (for Delay Repay) ----
+const TICKETS = ["Season ticket", "Flexi season", "Anytime single", "Anytime return", "Off-peak single",
+  "Off-peak return", "Advance", "Smartcard / pay as you go", "Other"];
+const PAYMENTS = ["Bank transfer", "Card used to buy the ticket", "Rail travel vouchers", "Cheque", "Other"];
+const CLAIM_FIELDS = { first_name: "c-first", last_name: "c-last", email: "c-email", phone: "c-phone",
+  address1: "c-addr1", address2: "c-addr2", town: "c-town", postcode: "c-postcode", payment: "c-payment",
+  ticket_type: "c-ttype", ticket_number: "c-tnum", ticket_price: "c-tprice", railcard: "c-railcard",
+  valid_from: "c-tfrom", valid_until: "c-tuntil" };
+$("c-payment").innerHTML += PAYMENTS.map(p => `<option>${p}</option>`).join("");
+$("c-ttype").innerHTML += TICKETS.map(p => `<option>${p}</option>`).join("");
+function showClaim(sub) {
+  $("claimcard").hidden = false;
+  const p = sub.claim_profile || {};
+  for (const [k, id] of Object.entries(CLAIM_FIELDS)) $(id).value = p[k] || "";
+  showFiles(sub.claim_files || []);
+}
+function showFiles(files) {
+  const kb = n => n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.round(n / 1e3)} KB`;
+  $("c-list").innerHTML = files.map(f => `<li><i class="ph ph-${f.mime === "application/pdf" ? "file-pdf" : "image"}" aria-hidden="true"></i>` +
+    `<span>${esc(f.name)}</span><small>${kb(f.size)}</small>` +
+    `<a class="button small" href="${accountURL(`/api/claim-file?token=${encodeURIComponent(token)}&id=${f.id}`)}" target="_blank" rel="noopener">View</a>` +
+    `<button type="button" class="small danger" data-del="${f.id}">Delete</button></li>`).join("") ||
+    `<li class="muted"><span>No tickets uploaded yet.</span></li>`;
+  $("c-list").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+    if (!confirm("Delete this file?")) return;
+    await api("/api/claim-file-delete", { token, id: Number(b.dataset.del) });
+    loadAccount();
+  });
+}
+$("c-save").onclick = async () => {
+  const profile = Object.fromEntries(Object.entries(CLAIM_FIELDS).map(([k, id]) => [k, $(id).value]));
+  const result = await api("/api/claim-profile", { token, profile });
+  message(result.error || "Claim details saved.", !result.error);
+};
+$("c-files").onchange = async e => {
+  for (const file of e.target.files) {
+    if (file.size > 8 * 1024 * 1024) { message(`${file.name} is too big (8 MB at most).`); continue; }
+    const data = await new Promise((ok, fail) => {
+      const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = fail; r.readAsDataURL(file);
+    });
+    const result = await api("/api/claim-file", { token, name: file.name, mime: file.type || "application/octet-stream", data });
+    if (result.error) message(`${file.name}: ${result.error}`);
+  }
+  e.target.value = "";
+  loadAccount();
+  message("Uploaded.", true);
+};
+
+function fillForm(sub) {
+  $("signedout").hidden = true;
+  $("form").hidden = false;
+  $("title").textContent = `Hello, ${sub.name}`;
+  $("name").value = sub.name;
+  $("username").value = sub.username || "";
+  $("username").disabled = true;
+  $("password").value = "";
+  $("passlabel").textContent = "New password";
+  $("passnote").hidden = false;
+  $("phone").value = sub.phone || "";
+  $("apikey").value = sub.apikey || "";
+  $("ntfy").value = sub.ntfy_topic || "";
+  showTelegram(sub);
+  const p = sub.prefs || {};
+  $("b-from").innerHTML = options(p.board_station || "BCS");
+  $("b-to").innerHTML = options(p.board_to || "", "Anywhere");
+  $("stations").innerHTML = "";
+  (p.station_watches || []).forEach(addStation);
+  $("journeys").innerHTML = "";
+  $("legs").innerHTML = "";
+  const toWork = (sub.journeys || []).find(j => j.label === "to_work");
+  const toHome = (sub.journeys || []).find(j => j.label === "to_home");
+  commute = { home: toWork?.from || toHome?.to || null, work: toWork?.to || toHome?.from || null };
+  setLeg("to_work", toWork || {});
+  setLeg("to_home", toHome || {});
+  showCommute();
+  (sub.journeys || []).filter(j => !j.label).forEach(addJourney);
+  $("summary-on").checked = !!p.summary_at;
+  if (p.summary_at) $("summary-at").value = p.summary_at;
+  $("works-on").checked = (p.works_at || "19:00") !== "off";
+  if (p.works_at && p.works_at !== "off") $("works-at").value = p.works_at;
+  $("codecard").hidden = true;
+  showClaim(sub);
+  $("save").textContent = "Save";
+  $("test").hidden = $("logout").hidden = $("delete").hidden = false;
+  loadTicked();
+}
+
+function formData() {
+  return {
+    token, code: $("code").value, name: $("name").value, username: $("username").value,
+    password: $("password").value, phone: $("phone").value, apikey: $("apikey").value,
+    ntfy_topic: $("ntfy").value, journeys: readJourneys(),
+    prefs: {
+      board_station: $("b-from").value, board_to: $("b-to").value || null,
+      station_watches: readStations(),
+      summary_at: $("summary-on").checked ? $("summary-at").value : null,
+      works_at: $("works-on").checked ? $("works-at").value : "off",
+    },
+  };
+}
+
+async function loadAccount() {
+  const result = await api(`/api/account?token=${encodeURIComponent(token)}`);
+  if (result.error) {
+    token = null;
+    localStorage.removeItem("tt_token");
+    return showSignedOut();
+  }
+  fillForm(result.subscription);
+}
+
+function signedIn(newToken) {
+  token = newToken;
+  localStorage.setItem("tt_token", token);        // the board's alert bells use this too
+  history.replaceState(null, "", location.pathname);
+}
+
+$("loginform").onsubmit = async e => {
+  e.preventDefault();
+  const result = await api("/api/login", { username: $("l-user").value, password: $("l-pass").value });
+  if (result.error) return message(result.error);
+  message("");
+  signedIn(result.token);
+  loadAccount();
+};
+
+$("form").onsubmit = async e => {
+  e.preventDefault();
+  $("save").disabled = true;
+  try {
+    const isNew = !token;
+    const result = await api("/api/register", formData());
+    if (result.error) return message(result.error);
+    signedIn(result.token);
+    await loadAccount();
+    message(isNew ? (telegramOn ? "Your account is ready. Now tap Connect Telegram."
+                               : "Your account is ready. Try a test message.") : "Saved.", true);
+  } catch (err) {
+    message("Couldn't reach the server.");
+  } finally {
+    $("save").disabled = false;
+  }
+};
+
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  message("");
+  showSignedOut(b.dataset.tab);
+  if (b.dataset.tab === "create" && !$("b-from").options.length) {
+    $("b-from").innerHTML = options("BCS");
+    $("b-to").innerHTML = options("MYB", "Anywhere");
+  }
+});
+$("add-station").onclick = () => addStation();
+$("commute-swap").onclick = swapCommute;
+$("add-journey").onclick = () => addJourney();
+$("test").onclick = async () => {
+  const result = await api("/api/test-message", { token });
+  message(result.error || "Sent: check your phone.", !result.error);
+};
+
+// Telegram: the bot links a chat to this account when its /start link is
+// opened, so after tapping Connect we check back until it has.
+let telegramOn = false, tgWatch = null;
+function showTelegram(sub) {
+  const signedIn = !!sub;
+  $("tg").hidden = !telegramOn;
+  $("tg-new").hidden = !telegramOn || signedIn;
+  $("tg-connect").hidden = !telegramOn || !signedIn || !!sub?.telegram;
+  $("tg-disconnect").hidden = !sub?.telegram;
+  $("tg-status").textContent = sub?.telegram
+    ? "Connected: alerts come to your Telegram chat with the TrainTimes bot."
+    : "Telegram is the most reliable way to get alerts. Install the free Telegram app, then connect it here.";
+  $("others-summary").textContent = telegramOn ? "Or use WhatsApp or ntfy" : "WhatsApp or ntfy";
+  $("others").open = !telegramOn || !!(sub?.phone || sub?.ntfy_topic);
+}
+$("tg-connect").onclick = async () => {
+  const win = window.open("", "_blank");     // opened now, so pop-up blockers allow it
+  const result = await api("/api/telegram-link", { token });
+  if (result.error) { win?.close(); return message(result.error); }
+  if (win) win.location = result.link; else location.href = result.link;
+  message("In Telegram, tap Start. This page updates once you're connected.", true);
+  clearInterval(tgWatch);
+  let tries = 0;
+  tgWatch = setInterval(async () => {
+    const r = await api(`/api/account?token=${encodeURIComponent(token)}`);
+    if (r.subscription?.telegram) {
+      clearInterval(tgWatch);
+      showTelegram(r.subscription);
+      message("Telegram connected. Try a test message.", true);
+    } else if (++tries > 120) clearInterval(tgWatch);
+  }, 3000);
+};
+$("tg-disconnect").onclick = async () => {
+  await api("/api/telegram-unlink", { token });
+  loadAccount();
+};
+$("logout").onclick = () => {
+  localStorage.removeItem("tt_token");
+  location.href = "/account";
+};
+$("delete").onclick = async () => {
+  if (!confirm("Delete your account and stop all your alerts?")) return;
+  await api("/api/unregister", { token });
+  localStorage.removeItem("tt_token");
+  location.href = "/account";
+};
+
+(async () => {
+  stations = ((await api("/api/stations")).stations || []).filter(s => s.crs);
+  telegramOn = !!(await api("/api/config")).telegram;
+  showTelegram(null);
+  homePicker = stationPicker($("home"), $("home-list"), {
+    stations: () => stations, optional: true, emptyLabel: "Not set",
+    onPick: crs => { commute.home = crs; showCommute(); } });
+  workPicker = stationPicker($("work"), $("work-list"), {
+    stations: () => stations, optional: true, emptyLabel: "Not set",
+    onPick: crs => { commute.work = crs; showCommute(); } });
+  showCommute();
+  if (token) return loadAccount();
+  showSignedOut();
+})();
+</script>
+</body>
+</html>

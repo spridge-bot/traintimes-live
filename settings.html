@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en" data-static="1" data-api="https://ians-mac-mini.tail9eb485.ts.net:8443">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0c0e">
+<title>Settings | TrainTimes</title>
+<meta name="description" content="Your TrainTimes settings: home and work, where departures open, location, the map and alerts.">
+<script>try{var t=localStorage.getItem("tt-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preload" href="assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/brand.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<script src="assets/theme.js" defer></script>
+<script src="assets/settings.js"></script>
+<script src="assets/accounts.js"></script>
+<script src="assets/picker.js"></script>
+<style>
+/* Settings. Design read: a plain, calm preferences screen on a phone, grouped the
+   way people think about the app (my trip, the screens, alerts), on the shared brand
+   layer. Dials: VARIANCE 3, MOTION 2, DENSITY 5. */
+#main{padding-top:28px;padding-bottom:48px;max-width:680px}
+h1{font-size:clamp(28px,7vw,36px);letter-spacing:-.035em;font-weight:700}
+.title-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.theme-btn.big{width:46px;height:46px;font-size:22px;border:1px solid var(--line-strong);background:var(--panel)}
+.lede{margin:6px 0 0;color:var(--ink-3);font-size:14.5px}
+.group{margin-top:26px}
+.group>h2{font:650 12px/1 var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4);margin:0 0 10px 4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-panel)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center;padding:14px 16px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .label{font:600 15px/1.3 var(--font-ui);color:var(--ink-1)}
+.row .help{grid-column:1/-1;margin:0;font-size:13px;line-height:1.45;color:var(--ink-3)}
+.row.stack{grid-template-columns:1fr}
+.pair{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:end;position:relative}
+.pair .picker-list{grid-column:1/-1}
+.pair input{height:42px;font-size:15px}
+.pair .swap{height:42px;width:42px;padding:0;justify-content:center}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.switch{position:relative;width:48px;height:28px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;border-radius:var(--r-pill);background:var(--line-strong);transition:background .15s var(--ease-out);pointer-events:none}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s var(--ease-out)}
+.switch input:checked+span{background:var(--signal)}
+.switch input:checked+span::after{transform:translateX(20px)}
+.switch input:focus-visible+span{outline:2px solid var(--signal);outline-offset:2px}
+.status{font:500 12.5px/1.3 var(--font-num);color:var(--ink-3)}
+.status.ok{color:var(--st-ok)} .status.bad{color:var(--st-bad)}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:var(--r-control);text-decoration:none;
+  border:1px solid var(--line-strong);background:var(--panel-up);color:var(--ink-1);font:600 14px var(--font-ui);cursor:pointer}
+.btn.primary{background:var(--signal);border-color:var(--signal);color:var(--on-signal)}
+.btn.danger{color:var(--st-bad)}
+.btn:active{transform:scale(.97)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;
+  padding:10px 16px;border-radius:var(--r-pill);background:var(--ink-1);color:var(--carbon);font:600 13.5px var(--font-ui);
+  transition:opacity .2s var(--ease-out),transform .2s var(--ease-out);pointer-events:none;z-index:50}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){.switch span,.switch span::after,.toast{transition:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to settings</a>
+<header class="tt-nav">
+  <div>
+    <a class="tt-mark" href="now.html" aria-label="TrainTimes: your next train">TRAINTIMES</a>
+    <nav aria-label="Main">
+      <a class="nav-live" href="now.html">Live</a>
+      <a href="index.html">Tracker</a>
+      <a href="map.html">Map</a>
+      <a href="history.html">Delays</a>
+      <a class="icon-btn settings-link" href="settings.html" aria-current="page" aria-label="Settings" title="Settings">
+        <i class="ph ph-gear-six" aria-hidden="true"></i></a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <div class="title-row">
+    <h1>Settings</h1>
+    <button class="theme-btn big" type="button" aria-label="Switch theme">
+      <i class="ph ph-moon i-moon" aria-hidden="true"></i><i class="ph ph-sun i-sun" aria-hidden="true"></i>
+    </button>
+  </div>
+  <p class="lede">Saved on this phone and used by every page. Changes save as you go.</p>
+
+  <section class="group" aria-labelledby="g-trip">
+    <h2 id="g-trip">Your trip</h2>
+    <div class="card">
+      <div class="row stack">
+        <span class="label">Home and work</span>
+        <div class="pair">
+          <label class="field"><span>Home</span>
+            <input type="text" id="home" aria-label="Home station" placeholder="Not set"></label>
+          <button type="button" class="chip swap" id="swap-commute" aria-label="Swap home and work" title="Swap">
+            <i class="ph ph-arrows-left-right" aria-hidden="true"></i></button>
+          <label class="field"><span>Work</span>
+            <input type="text" id="work" aria-label="Work station" placeholder="Not set"></label>
+          <ul class="picker-list" id="home-list"></ul>
+          <ul class="picker-list" id="work-list"></ul>
+        </div>
+        <p class="help">The Next page shows trains between these, towards work in the morning and home later.</p>
+      </div>
+      <div class="row">
+        <span class="label">Use my location</span>
+        <label class="switch"><input type="checkbox" id="use-location" aria-label="Use my location"><span></span></label>
+        <p class="help">Near work, the Next page shows trains home, and near home, trains to work, whatever the
+          time. The map's departures open on the station you're at. Your location stays on your phone,
+          except your train's position while you're on one, if you share it (below). <span class="status" id="loc-status"></span></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="group" aria-labelledby="g-sharing">
+    <h2 id="g-sharing">Sharing</h2>
+    <div class="card">
+      <div class="row">
+        <span class="label">Share my train's position</span>
+        <label class="switch"><input type="checkbox" id="share-position" aria-label="Share my train's position"><span></span></label>
+        <p class="help">On a train, TrainTimes knows where it really is from your phone. Share that, so
+          people waiting for it see it too (and you see theirs before you board). Only the train and where it
+          is are sent, never who you are, and they're forgotten after two minutes.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="group" aria-labelledby="g-screens">
+    <h2 id="g-screens">Screens</h2>
+    <div class="card">
+      <div class="row stack">
+        <span class="label">Departures open on</span>
+        <div class="pair">
+          <label class="field"><span>From</span>
+            <input type="text" id="board-from" aria-label="Departures from" placeholder="Default"></label>
+          <button type="button" class="chip swap" id="swap-board" aria-label="Swap from and to" title="Swap">
+            <i class="ph ph-arrows-left-right" aria-hidden="true"></i></button>
+          <label class="field"><span>To</span>
+            <input type="text" id="board-to" aria-label="Departures to" placeholder="Anywhere"></label>
+          <ul class="picker-list" id="board-from-list"></ul>
+          <ul class="picker-list" id="board-to-list"></ul>
+        </div>
+        <p class="help">Used by the Departures page and the map's panel when a link doesn't say otherwise.</p>
+      </div>
+      <div class="row stack">
+        <span class="label">When I pick a train on the map, show</span>
+        <div class="seg" role="group" aria-label="Trains shown with a train selected" id="map-focus">
+          <button type="button" class="chip" data-value="ahead">Trains ahead on its line</button>
+          <button type="button" class="chip" data-value="mine">Only that train</button>
+          <button type="button" class="chip" data-value="all">Every train</button>
+        </div>
+        <p class="help">Trains ahead going the same way are the ones that could hold yours up.</p>
+      </div>
+      <div class="row">
+        <span class="label">Keep the rest of the railway on the map</span>
+        <label class="switch"><input type="checkbox" id="map-network" aria-label="Keep the rest of the railway on the map"><span></span></label>
+        <p class="help">Off: with a train picked, only its route is drawn over the background map.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="group" aria-labelledby="g-alerts">
+    <h2 id="g-alerts">Alerts</h2>
+    <div class="card">
+      <div class="row stack" id="account-row">
+        <span class="label" id="account-title">Messages about your trains</span>
+        <p class="help" id="account-help">Telegram or WhatsApp messages before you travel, when trains at your
+          stations are disrupted, planned engineering works the evening before, and a daily summary.</p>
+        <div class="btns" id="account-btns"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="group" aria-labelledby="g-device">
+    <h2 id="g-device">This phone</h2>
+    <div class="card">
+      <div class="row">
+        <span class="label">Reset settings</span>
+        <button type="button" class="btn danger" id="reset">Reset</button>
+        <p class="help">Forgets everything above on this phone. Your account and alerts aren't affected.</p>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const STATIC = document.documentElement.dataset.static === "1";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const S = window.ttSettings;
+let toastTimer;
+function saved(text = "Saved") {
+  $("toast").textContent = text;
+  $("toast").classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("toast").classList.remove("show"), 1400);
+}
+async function json(url) { return (await fetch(url, { cache: "no-store" })).json(); }
+
+// ---- Segmented choices and switches ----
+function segmented(id, key) {
+  const el = $(id);
+  const show = () => el.querySelectorAll("[data-value]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.value === S.get(key))));
+  el.onclick = e => {
+    const b = e.target.closest("[data-value]");
+    if (!b) return;
+    S.set(key, b.dataset.value);
+    show();
+    saved();
+  };
+  show();
+}
+segmented("map-focus", "map_focus");
+
+$("map-network").checked = !!S.get("map_network");
+$("map-network").onchange = e => { S.set("map_network", e.target.checked); saved(); };
+
+// ---- Location ----
+function locStatus(text, cls = "") { $("loc-status").textContent = text; $("loc-status").className = `status ${cls}`; }
+async function showLocation() {
+  $("use-location").checked = S.get("use_location");
+  if (!navigator.geolocation || !window.isSecureContext) {
+    return locStatus("This address isn't secure (https), so phones won't share location here; the published site works.", "bad");
+  }
+  try {
+    const p = await navigator.permissions?.query({ name: "geolocation" });
+    if (p) locStatus(p.state === "granted" ? "Allowed." : p.state === "denied"
+      ? "Blocked in your browser's settings for this site." : "", p.state === "granted" ? "ok" : p.state === "denied" ? "bad" : "");
+  } catch (e) { /* not supported: fine */ }
+}
+$("share-position").checked = S.get("share_position") !== false;
+$("share-position").onchange = e => { S.set("share_position", e.target.checked); saved(e.target.checked ? "Sharing on" : "Sharing off"); };
+$("use-location").onchange = e => {
+  if (!e.target.checked) { S.set("use_location", false); saved(); return showLocation(); }
+  navigator.geolocation?.getCurrentPosition(() => {
+    S.set("use_location", true); saved("Location on"); showLocation();
+  }, err => {
+    e.target.checked = false;
+    S.set("use_location", false);
+    locStatus(err.code === 1 ? "Blocked: allow location for this site in your browser's settings." : err.message, "bad");
+  }, { timeout: 10e3 });
+};
+
+// ---- Stations ----
+let stations = [];
+function stationPair(a, b, keyA, keyB, swapId, optionalB) {
+  const pa = stationPicker($(a), $(`${a}-list`), { stations: () => stations, optional: true, emptyLabel: "Not set",
+    onPick: crs => { S.set(keyA, crs); saved(); } });
+  const pb = stationPicker($(b), $(`${b}-list`), { stations: () => stations, optional: true,
+    emptyLabel: optionalB || "Not set", onPick: crs => { S.set(keyB, crs); saved(); } });
+  pa.set(S.get(keyA)); pb.set(S.get(keyB));
+  $(swapId).onclick = () => {
+    const x = S.get(keyA), y = S.get(keyB);
+    S.set(keyA, y); S.set(keyB, x); pa.set(y); pb.set(x);
+    saved("Swapped");
+  };
+  return [pa, pb];
+}
+
+// ---- Alerts: an account on the live server ----
+async function showAccount() {
+  const btns = $("account-btns");
+  if (!ACCOUNTS) {
+    $("account-help").textContent += " Accounts aren't available on this copy of the site.";
+    return;
+  }
+  const token = localStorage.getItem("tt_token");
+  const sub = token ? (await accountJSON(`/api/account?token=${encodeURIComponent(token)}`).catch(() => ({}))).subscription : null;
+  if (!sub) {
+    btns.innerHTML = `<a class="btn primary" href="${STATIC ? "account.html" : "/account"}">Log in or create an account</a>`;
+    return;
+  }
+  const via = [sub.telegram && "Telegram", sub.phone && "WhatsApp", sub.ntfy_topic && "ntfy"].filter(Boolean);
+  $("account-title").textContent = `Signed in as ${sub.name}`;
+  $("account-help").textContent = via.length ? `Alerts go to ${via.join(" and ")}.`
+    : "Alerts aren't going anywhere yet: connect Telegram on your account page.";
+  btns.innerHTML = `<a class="btn primary" href="${STATIC ? "account.html" : "/account"}"><i class="ph ph-bell" aria-hidden="true"></i>Manage alerts</a>` +
+    `<a class="btn" href="${STATIC ? "history.html" : "/history"}">Delay Repay</a>` +
+    `<button type="button" class="btn" id="logout">Log out</button>`;
+  $("logout").onclick = () => { localStorage.removeItem("tt_token"); location.reload(); };
+  // Signed in with a commute but none set here: use it.
+  const toWork = (sub.journeys || []).find(j => j.label === "to_work");
+  if (toWork && !S.get("home") && !S.get("work")) {
+    S.set("home", toWork.from); S.set("work", toWork.to);
+    commute[0].set(toWork.from); commute[1].set(toWork.to);
+  }
+}
+
+$("reset").onclick = () => {
+  if (!confirm("Reset all settings on this phone?")) return;
+  S.reset();
+  location.reload();
+};
+
+let commute;
+(async () => {
+  stations = ((STATIC ? await json("data/stations.json") : await json("/api/stations")).stations || []).filter(s => s.crs);
+  commute = stationPair("home", "work", "home", "work", "swap-commute");
+  stationPair("board-from", "board-to", "board_from", "board_to", "swap-board", "Anywhere");
+  showLocation();
+  showAccount();
+})();
+</script>
+</body>
+</html>

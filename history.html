@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en" data-static="1" data-api="https://ians-mac-mini.tail9eb485.ts.net:8443">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0c0e">
+<title>Delays | TrainTimes</title>
+<script>try{var t=localStorage.getItem("tt-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preload" href="assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/brand.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<script src="assets/theme.js" defer></script>
+<script src="assets/settings.js"></script>
+<script src="assets/accounts.js"></script>
+<script src="assets/format.js"></script>
+<style>
+/* Delay Repay. Design read: a claims checklist for commuters, most useful item first
+   (what you can claim now, with everything the form asks for), then the record behind
+   it. Dials: VARIANCE 3, MOTION 2, DENSITY 5. */
+#main{padding-top:28px;padding-bottom:48px;max-width:760px}
+h1{font-size:clamp(28px,7vw,36px);letter-spacing:-.035em;font-weight:700}
+.lede{margin:6px 0 0;color:var(--ink-3);font-size:14.5px;line-height:1.5}
+.group{margin-top:28px}
+.group>h2{font:650 12px/1 var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4);margin:0 0 10px 4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-panel)}
+.claim{padding:16px;border-top:1px solid var(--line)}
+.claim:first-child{border-top:0}
+.claim .top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.claim .band{font:700 20px/1 var(--font-num);color:var(--st-late)}
+.claim .band.big{color:var(--st-bad)}
+.claim .what{font:600 15px/1.3 var(--font-ui)}
+.claim dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 14px;margin:12px 0 0;font-size:13.5px}
+.claim dt{color:var(--ink-4)} .claim dd{margin:0;font-family:var(--font-num)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border-radius:var(--r-control);text-decoration:none;
+  border:1px solid var(--line-strong);background:var(--panel-up);color:var(--ink-1);font:600 13.5px var(--font-ui);cursor:pointer}
+.btn.primary{background:var(--signal);border-color:var(--signal);color:var(--on-signal)}
+.btn:active{transform:scale(.97)}
+.empty{padding:18px;color:var(--ink-3);font-size:14px;line-height:1.5}
+.leg{margin-top:14px}
+.leg h3{padding:14px 16px 4px;font-size:16px;font-weight:650}
+.leg .sub{padding:0 16px 10px;color:var(--ink-3);font-size:13px}
+.day{padding:6px 16px;font:650 12px/1.3 var(--font-ui);color:var(--ink-3);background:var(--panel-up);border-top:1px solid var(--line)}
+.trip{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:10px 16px;border-top:1px solid var(--line);font-size:14px}
+.trip .t{font:650 15px/1 var(--font-num)}
+.trip.usual .t::after{content:"usual";display:block;margin-top:3px;font:600 10px/1 var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--signal-ink)}
+.trip .how{color:var(--ink-3);font-size:13px}
+.trip .pay{font:650 13px/1 var(--font-ui);text-align:right;white-space:nowrap}
+.pay.none{color:var(--st-ok)} .pay.some{color:var(--st-late)} .pay.lots{color:var(--st-bad)} .pay.unknown{color:var(--ink-4)}
+.pat h3{padding:14px 16px 2px;font-size:15px;font-weight:650}
+.pat .sub{padding:0 16px 8px;color:var(--ink-3);font-size:12.5px}
+.pat ol{list-style:none;margin:0;padding:0}
+.pat li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:9px 16px;border-top:1px solid var(--line);font-size:14px}
+.pat li small{grid-column:1/-1;color:var(--ink-3);font-size:12.5px}
+.pat li b.n{font:650 14px/1.2 var(--font-num);color:var(--st-late);text-align:right}
+.note{margin-top:22px;color:var(--ink-3);font-size:13px;line-height:1.55}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;
+  padding:10px 16px;border-radius:var(--r-pill);background:var(--ink-1);color:var(--carbon);font:600 13.5px var(--font-ui);
+  transition:opacity .2s var(--ease-out),transform .2s var(--ease-out);pointer-events:none;z-index:50}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to delays</a>
+<header class="tt-nav">
+  <div>
+    <a class="tt-mark" href="now.html" aria-label="TrainTimes: your next train">TRAINTIMES</a>
+    <nav aria-label="Main">
+      <a class="nav-live" href="now.html">Live</a>
+      <a href="index.html">Tracker</a>
+      <a href="map.html">Map</a>
+      <a href="history.html" aria-current="page">Delays</a>
+      <a class="icon-btn settings-link" href="settings.html" aria-label="Settings" title="Settings">
+        <i class="ph ph-gear-six" aria-hidden="true"></i></a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <h1>Delays</h1>
+  <p class="lede" id="lede">Your morning trains to work and evening trains home this week: every train
+    around your usual times, how late it got in, and what you can claim.</p>
+
+  <section class="group" aria-labelledby="g-claim">
+    <h2 id="g-claim">Ready to claim</h2>
+    <div class="card" id="claims"><div class="empty">Loading…</div></div>
+  </section>
+
+  <section class="group" aria-labelledby="g-fill">
+    <h2 id="g-fill">One-tap fill-in (set up once)</h2>
+    <div class="card"><div class="empty">
+      <p style="margin:0">A bookmark that fills in the operator's claim form for you: tap <b>Claim</b> above, log in
+        to their claim site, start a claim, then tap the bookmark. You check it, add your ticket and press their
+        Submit.</p>
+      <p style="margin:10px 0 0"><b>On a computer:</b> drag this to your bookmarks bar:
+        <a class="btn" id="bookmarklet" href="#">TrainTimes: fill claim</a></p>
+      <p style="margin:10px 0 0"><b>On an iPhone:</b> tap <button type="button" class="btn" id="copy-bm">Copy bookmark code</button>,
+        then in Safari bookmark any page (Share → Add Bookmark), name it <i>TrainTimes: fill claim</i>, edit it, and
+        paste the code as its address. On the claim form, type "TrainTimes" in the address bar and pick the bookmark.</p>
+    </div></div>
+  </section>
+
+  <section class="group" aria-labelledby="g-trains">
+    <h2 id="g-trains">Your trains this week</h2>
+    <div id="legs"></div>
+  </section>
+
+  <section class="group" aria-labelledby="g-line">
+    <h2 id="g-line">Chiltern line patterns</h2>
+    <div class="card" id="patterns"><div class="empty">Loading…</div></div>
+  </section>
+
+  <p class="note">Delay Repay is paid on how late you <b>arrive</b> against the timetable: 15-29 minutes
+    25% of a single, 30-59 minutes 50%, 60-119 minutes 100%, 2 hours or more the full return. For a cancelled
+    train, claim for how late you actually got there. Claims are made with the operator of the delayed
+    train, within 28 days, with a photo of your ticket. TrainTimes can't send the claim for you, but
+    everything the form asks for is here to copy.</p>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const time = iso => iso ? new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" }) : "–";
+const day = iso => new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Europe/London" });
+const longDay = iso => new Date(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" });
+// Each operator's own Delay Repay claim page (from National Rail's list);
+// others: National Rail's page of them all.
+const CLAIM_PAGES = {
+  CH: "https://delayrepay.chilternrailways.co.uk/",
+  XC: "https://www.crosscountrytrains.co.uk/help-support/delay-repay",
+  GW: "https://www.gwr.com/help-and-support/refunds-and-compensation/delay-repay",
+  VT: "https://www.avantiwestcoast.co.uk/help-and-support/delay-repay",
+  CC: "https://www.c2c-online.co.uk/help-feedback/delay-repay/",
+  EM: "https://www.eastmidlandsrailway.co.uk/help-manage/manage/make-a-delay-repay-claim",
+  GR: "https://www.lner.co.uk/support/delay-repay/",
+  GN: "https://www.greatnorthernrail.com/help-and-support/delay-repay-compensation",
+  GX: "https://www.gatwickexpress.com/help-and-support/delay-repay-compensation",
+};
+const ALL_CLAIMS = "https://www.nationalrail.co.uk/help-and-assistance/compensation-and-refunds/";
+
+let toastTimer;
+function toast(text) {
+  $("toast").textContent = text;
+  $("toast").classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("toast").classList.remove("show"), 1600);
+}
+
+function payClass(t) {
+  if (t.cancelled) return "lots";
+  if (t.arrival_delay == null) return "unknown";
+  return t.arrival_delay >= 30 ? "lots" : t.arrival_delay >= 15 ? "some" : "none";
+}
+function payText(t) {
+  if (t.cancelled) return "Cancelled: claim";
+  if (t.compensation) return `${t.compensation} back`;
+  if (t.arrival_delay == null) return t.status || "No data";
+  return t.arrival_delay ? delayLabel(t.arrival_delay) : "On time";
+}
+
+// The claim for the fill-in bookmark (assets/claimfill.js).
+let profile = {};            // your claim details, from your account
+function claimData(t) {
+  const ukDate = new Date(t.planned_departure).toLocaleDateString("en-GB", { timeZone: "Europe/London" });
+  return { tt: 1, me: profile, date_uk: ukDate, from: t.from, to: t.to, dep: time(t.planned_departure),
+           arr_due: time(t.planned_arrival), arr_actual: t.actual_arrival ? time(t.actual_arrival) : "",
+           delay: t.arrival_delay, cancelled: !!t.cancelled, operator: t.operator || "", train: t.headcode || "" };
+}
+
+// What the claim form asks for, ready to paste.
+function claimText(t) {
+  return [
+    `Date of travel: ${longDay(t.planned_departure)}`,
+    `From: ${t.from}`,
+    `To: ${t.to}`,
+    `Scheduled departure: ${time(t.planned_departure)}`,
+    `Scheduled arrival: ${time(t.planned_arrival)}`,
+    t.cancelled ? "Train cancelled" : `Actual arrival: ${time(t.actual_arrival)} (${t.arrival_delay} minutes late)`,
+    t.operator ? `Operator: ${t.operator}` : "",
+    t.headcode ? `Train: ${t.headcode}` : "",
+  ].filter(Boolean).join("\n");
+}
+
+function renderClaims(list) {
+  if (!list.length) {
+    $("claims").innerHTML = `<div class="empty">Nothing to claim from the last week: every train around your times got in within 15 minutes.</div>`;
+    return;
+  }
+  $("claims").innerHTML = list.map((t, n) => {
+    const link = CLAIM_PAGES[t.operator_code] || ALL_CLAIMS;
+    return `<div class="claim">
+      <div class="top"><span class="band${t.cancelled || (t.arrival_delay || 0) >= 30 ? " big" : ""}">${esc(t.compensation || "Cancelled")}</span>
+        <span class="what">${esc(day(t.planned_departure))}, ${time(t.planned_departure)} ${esc(t.from)} → ${esc(t.to)}</span></div>
+      <dl>
+        <dt>Due in</dt><dd>${time(t.planned_arrival)}</dd>
+        <dt>Got in</dt><dd>${t.cancelled ? "Cancelled" : `${time(t.actual_arrival)}, ${t.arrival_delay} min late`}</dd>
+        <dt>Operator</dt><dd>${esc(t.operator || "–")}${t.headcode ? ` (${esc(t.headcode)})` : ""}</dd>
+        <dt>Claim by</dt><dd>${esc(new Date(t.claim_by).toLocaleDateString("en-GB", { day: "numeric", month: "long" }))}</dd>
+      </dl>
+      <div class="acts">
+        <button type="button" class="btn primary" data-claim="${n}" data-link="${link}"><i class="ph ph-paper-plane-tilt" aria-hidden="true"></i>Claim with ${esc(t.operator || "the operator")}</button>
+        <button type="button" class="btn" data-copy="${n}"><i class="ph ph-copy" aria-hidden="true"></i>Copy details</button>
+      </div>
+    </div>`;
+  }).join("");
+  // Claim: copy it for the fill-in bookmark, and open the claim portal.
+  $("claims").querySelectorAll("[data-claim]").forEach(b => b.onclick = async () => {
+    const t = list[Number(b.dataset.claim)];
+    const text = JSON.stringify(claimData(t));
+    try { await navigator.clipboard.writeText(text); } catch (e) { prompt("Copy this, then use the fill-in bookmark on the claim form:", text); }
+    window.open(b.dataset.link, "_blank", "noopener");
+    toast("Claim copied: on the claim form, tap your TrainTimes fill-in bookmark");
+  });
+  $("claims").querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
+    try { await navigator.clipboard.writeText(claimText(list[Number(b.dataset.copy)])); toast("Copied: paste into the claim form"); }
+    catch (e) { prompt("Copy these details:", claimText(list[Number(b.dataset.copy)])); }
+  });
+}
+
+function renderLegs(legs) {
+  $("legs").innerHTML = legs.map(leg => {
+    const byDay = new Map();
+    for (const t of [...leg.trips].sort((a, b) => a.planned_departure < b.planned_departure ? 1 : -1)) {
+      const d = day(t.planned_departure);
+      if (!byDay.has(d)) byDay.set(d, []);
+      byDay.get(d).push(t);
+    }
+    const days = [...byDay.entries()].map(([d, trips]) =>
+      `<div class="day">${esc(d)}</div>` + trips.sort((a, b) => a.planned_departure > b.planned_departure ? 1 : -1).map(t =>
+        `<div class="trip${t.usual ? " usual" : ""}"><span class="t">${time(t.planned_departure)}</span>` +
+        `<span><span>${t.cancelled ? "Cancelled" : t.actual_arrival ? `Got in ${time(t.actual_arrival)}` : esc(t.status)}</span>` +
+        `<span class="how"> · due ${time(t.planned_arrival)}</span></span>` +
+        `<span class="pay ${payClass(t)}">${esc(payText(t))}</span></div>`).join("")).join("");
+    const morning = (leg.times[0] || "12:00") < "12:00";
+    const label = leg.label === "to_work" ? "Mornings, to work" : leg.label === "to_home" ? "Evenings, home"
+      : morning ? "Mornings" : "Evenings";
+    return `<div class="card leg"><h3>${label ? `${label}: ` : ""}${esc(leg.from_name)} → ${esc(leg.to_name)}</h3>
+      <div class="sub">Usually ${esc(leg.times.join(", "))}, and the trains within 75 minutes either side</div>
+      ${days || `<div class="empty">No trains recorded yet this week.</div>`}</div>`;
+  }).join("") || `<div class="card"><div class="empty">Add your regular journeys on your <a href="account.html">account page</a>
+    (Your commute) and they'll be tracked here.</div></div>`;
+}
+
+// ---- Where the line loses time, and why (patterns.py) ----
+const hours = hs => hs.length ? "mostly around " + hs.map(h => `${String(h).padStart(2, "0")}:00`).join(", ") : "";
+function renderPatterns(p) {
+  if (!p || !p.days) {
+    $("patterns").innerHTML = `<div class="empty">Recording has started: patterns show up after a few days of trains.</div>`;
+    return;
+  }
+  const section = (title, sub, items) => items.length ? `<div class="pat"><h3>${title}</h3><div class="sub">${sub}</div><ol>${items.join("")}</ol></div>` : "";
+  const html = [
+    section("Where time is lost", "Between timing points, Chiltern trains that got there 2+ minutes later than they were running",
+      p.hotspots.slice(0, 8).map(h => `<li><span>${esc(h.from)} → ${esc(h.to)}</span><b class="n">${h.minutes} min</b>` +
+        `<small>${h.lost_trains} of ${h.trains} trains lost time (${Math.round(100 * h.share)}%), on ${h.days} day${h.days === 1 ? "" : "s"}${h.busiest_hours.length ? ", " + hours(h.busiest_hours) : ""}</small></li>`)),
+    section("Trains that lose time in the same place", "On most days they ran",
+      p.trains.map(t => `<li><span>The ${esc(t.train)}: ${esc(t.from)} → ${esc(t.to)}</span><b class="n">+${t.typical} min</b>` +
+        `<small>Lost time there on ${t.days_lost} of ${t.days_ran} days</small></li>`)),
+    section("The same train in the way, again", "Held at a signal with the same train in the section ahead, on more than one day: often a timetable clash, and avoidable",
+      p.conflicts.map(c => `<li><span>After ${esc(c.after || "?")}: behind ${esc(c.ahead)}${c.kind ? `, ${esc(c.kind)}` : ""}</span><b class="n">${c.minutes} min</b>` +
+        `<small>On ${c.days} days, holding ${esc(c.held.join(", "))}</small></li>`)),
+    section("Held at signals", "From the signalling feed: where Chiltern trains stood at signals longer than usual",
+      p.holds.slice(0, 8).map(h => `<li><span>After ${esc(h.after)}</span><b class="n">${h.minutes} min</b>` +
+        `<small>${h.holds} hold${h.holds === 1 ? "" : "s"} on ${h.days} day${h.days === 1 ? "" : "s"}` +
+        `${h.section_clear ? `, ${h.section_clear} with the section ahead clear` : ""}${h.busiest_hours.length ? ", " + hours(h.busiest_hours) : ""}</small></li>`)),
+  ].join("");
+  $("patterns").innerHTML = (html || `<div class="empty">No regular problems yet.</div>`) +
+    `<div class="empty" style="padding-top:8px">From ${p.days} day${p.days === 1 ? "" : "s"} recorded, since ${esc(new Date(p.since).toLocaleDateString("en-GB", { day: "numeric", month: "short" }))}. Patterns firm up over a few weeks.</div>`;
+}
+(async () => {
+  let p = await accountJSON("/api/patterns").catch(() => null);
+  if (!p && document.documentElement.dataset.static === "1") p = await fetch("data/patterns.json").then(r => r.json()).catch(() => null);
+  renderPatterns(p);
+})();
+
+// The fill-in bookmark: claimfill.js as a javascript: address.
+(async () => {
+  try {
+    const code = (await (await fetch("assets/claimfill.js".replace(/^/, location.pathname.startsWith("/history") ? "/" : ""))).text())
+      .split("\n").filter(l => !/^\s*\/\//.test(l)).join("\n");
+    const url = "javascript:" + encodeURIComponent(code);
+    $("bookmarklet").href = url;
+    $("bookmarklet").onclick = e => { e.preventDefault(); toast("Drag it to your bookmarks bar"); };
+    $("copy-bm").onclick = async () => {
+      try { await navigator.clipboard.writeText(url); toast("Copied: paste it as the bookmark's address"); }
+      catch (e) { prompt("Copy this as the bookmark's address:", url); }
+    };
+  } catch (e) { /* the page still works without it */ }
+})();
+
+(async () => {
+  // Logged in: your commute and usual times. Otherwise your home and work
+  // stations from Settings, mornings to work and evenings home.
+  const token = localStorage.getItem("tt_token");
+  const home = ttSettings.get("home"), work = ttSettings.get("work");
+  if (!ACCOUNTS) {
+    $("claims").innerHTML = `<div class="empty">Delays need the TrainTimes server, which isn't available from this copy of the site.</div>`;
+    return;
+  }
+  if (!token && !(home && work)) {
+    $("claims").innerHTML = `<div class="empty">Set your home and work stations to track the trains you take.
+      <div class="acts"><a class="btn primary" href="settings.html">Set home and work</a>
+      <a class="btn" href="account.html">Log in</a></div></div>`;
+    return;
+  }
+  const path = token ? `/api/repay?token=${encodeURIComponent(token)}` : `/api/delays?home=${home}&work=${work}`;
+  if (token) accountJSON(`/api/account?token=${encodeURIComponent(token)}`)
+    .then(r => { profile = r.subscription?.claim_profile || {}; }).catch(() => {});
+  const data = await accountJSON(path).catch(() => ({ error: "Couldn't reach the TrainTimes server." }));
+  if (!token) $("lede").textContent = "Trains to work around 07:30 and home around 17:30 this week, from your stations in Settings. " +
+    "Log in to set your own usual times.";
+  if (data.error) {
+    $("claims").innerHTML = `<div class="empty">${esc(data.error)} <a href="account.html">Account</a></div>`;
+    return;
+  }
+  renderClaims(data.claimable || []);
+  renderLegs(data.legs || []);
+  if (data.recording_since) $("lede").textContent += ` Recorded since ${day(data.recording_since)}.`;
+})();
+</script>
+</body>
+</html>

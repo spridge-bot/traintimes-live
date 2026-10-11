@@ -1,0 +1,1464 @@
+<!doctype html>
+<html lang="en" data-static="1" data-api="https://ians-mac-mini.tail9eb485.ts.net:8443">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0c0e">
+<title>Live map | TrainTimes</title>
+<meta name="description" content="Every Chiltern Railways train on a live map, coloured by how it's running.">
+<script>try{var t=localStorage.getItem("tt-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preload" href="assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/brand.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"></script>
+<script src="assets/theme.js" defer></script>
+<script src="assets/settings.js"></script>
+<script src="assets/accounts.js"></script>
+<script src="assets/format.js"></script>
+<script src="assets/routes.js"></script>
+<script src="assets/whereami.js"></script>
+<script src="assets/ontrain.js"></script>
+<script src="assets/picker.js"></script>
+<script src="assets/journey.js"></script>
+<style>
+/* Live map. The map itself is always the light Signalbox style, so the train icons use
+   fixed status colours tuned for it; the panel and nav follow the brand theme.
+   Dials: VARIANCE 4, MOTION 3, DENSITY 6. */
+:root{
+  --ontime:#16a35a; --late:#f2c200; --verylate:#e0453b; --unknown:#7a8594;
+  --route:#ff8a00; --route-casing:#3a2200;
+}
+html,body{height:100%}
+body{overflow:hidden}
+#map{position:absolute;top:56px;left:0;right:0;bottom:0;background:#fff}
+.base-tiles{filter:grayscale(1) brightness(1.06) contrast(.85)}
+
+#panel{position:absolute;z-index:1000;top:72px;left:16px;width:340px;max-height:calc(100% - 88px);
+  display:flex;flex-direction:column;overflow:hidden;
+  background:color-mix(in srgb,var(--panel) 94%,transparent);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+#panel header{padding:16px 16px 12px}
+#grab{display:none}
+#panel h1{font-size:19px;letter-spacing:-.02em;font-weight:680}
+#panel .sub{margin-top:4px;font:450 12.5px/1.4 var(--font-num);color:var(--ink-3)}
+#panel .tabs{display:flex;gap:6px;margin-bottom:14px}
+#panel .tabs #toggle{margin-left:auto}
+#panel .tabs .chip{padding:0 10px}
+#panel #dep-op{height:38px;font-size:14px}
+/* One train, opened from a Next train tile: your trip and every stop's time. */
+#panel.trip-mode .tabs,#panel.trip-mode .legend{display:none}
+#trip-back{margin-bottom:12px}
+#panel .trip-sub{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;font:500 13.5px/1.35 var(--font-ui);color:var(--ink-3)}
+#panel .trip-sub .t{font:680 22px/1 var(--font-num);color:var(--ink-1)}
+#panel .trip-sub .st{font-weight:650}
+#panel .trip-sub .recentre{order:9;height:28px;font-size:12px}
+#panel .trip-sub .now{font:600 12px/1 var(--font-num);color:var(--ink-4);margin-left:auto}
+#trip-stops{list-style:none;margin:0;padding:6px 0 10px;overflow-y:auto;border-top:1px solid var(--line)}
+#trip-stops li{position:relative;display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;align-items:baseline;
+  padding:9px 16px 9px 34px}
+#trip-stops li::before{content:"";position:absolute;left:18px;top:0;bottom:0;width:2px;background:var(--route,#ff8a00)}
+#trip-stops li:first-child::before{top:50%} #trip-stops li:last-child::before{bottom:50%}
+#trip-stops li::after{content:"";position:absolute;left:14px;top:calc(50% - 5px);width:10px;height:10px;border-radius:50%;
+  background:var(--panel);border:2px solid var(--route,#ff8a00);box-sizing:border-box}
+#trip-stops li.been{color:var(--ink-4)} #trip-stops li.been::after{background:var(--route,#ff8a00)}
+#trip-stops li.next::after{box-shadow:0 0 0 4px color-mix(in srgb,var(--route,#ff8a00) 30%,transparent)}
+#trip-stops li.yours .n{font-weight:700;color:var(--ink-1)}
+#trip-stops li.outside{opacity:.55}
+#trip-stops .tm{font:650 14px/1.2 var(--font-num)}
+#trip-stops .tm s{display:block;font-size:11.5px;font-weight:450;color:var(--ink-4)}
+#trip-stops .tm.late{color:var(--st-late)}
+#trip-stops .n{font-size:14px}
+#trip-stops .tag{display:block;font:600 11px/1.3 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--signal-ink);margin-top:2px}
+#trip-stops .pl{font:500 12px/1 var(--font-num);color:var(--ink-3)}
+#panel .near-row{display:flex;align-items:center;gap:10px;margin-top:10px;min-height:30px}
+#panel .near-row .why{font:500 12.5px/1.3 var(--font-ui);color:var(--ink-3)}
+#panel .pick{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px;margin-top:12px;align-items:end}
+#panel .pick .swap{height:38px;width:38px;padding:0;justify-content:center}
+#panel .picker-list{max-height:200px}
+#panel .pick input{height:38px;font-size:14px}
+#deps{list-style:none;margin:0;padding:0;overflow-y:auto;border-top:1px solid var(--line)}
+#deps > li{position:relative;display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:baseline;
+  padding:10px 16px 10px 18px;border-top:1px solid var(--line);cursor:pointer;transition:background-color .15s var(--ease-out)}
+#deps > li:first-child{border-top:0}
+#deps > li.journey .d{display:block}
+#deps > li.journey .legs{grid-column:2/-1;display:grid;gap:4px;margin-top:6px;font:450 12.5px/1.35 var(--font-ui);color:var(--ink-2)}
+#deps > li.journey .leg small{display:block;color:var(--ink-4);font-size:11.5px}
+#deps > li.journey .change{color:var(--ink-3);font-style:italic}
+#deps > li.journey .change.risky{color:var(--st-late);font-style:normal;font-weight:600}
+#deps > li.note-row{display:block;padding:10px 16px 8px 18px;font:600 12px/1.3 var(--font-ui);color:var(--ink-3);
+  text-transform:uppercase;letter-spacing:.06em;background:var(--panel-up)}
+#deps > li::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c)}
+#deps > li:hover,#deps > li.selected{background:var(--panel-up)}
+#deps .t{font:600 15px/1.2 var(--font-num)}
+#deps .t s{display:block;font-size:11.5px;font-weight:450;color:var(--ink-4)}
+#deps .t .exp{color:var(--c)}
+#deps .d{font-weight:620;font-size:14px}
+#deps .o{display:block;color:var(--ink-3);font-size:12.5px;margin-top:1px}
+#deps .s{font-size:12.5px;font-weight:600;white-space:nowrap;text-align:right}
+#deps .s small{display:block;font:500 11.5px/1.3 var(--font-num);color:var(--ink-3)}
+#deps .empty,#list .empty{display:block;padding:18px 16px;color:var(--ink-3);cursor:default}
+#deps .more,#list .more{grid-column:1 / -1;display:none;margin-top:6px}
+#deps li.open .more,#list li.open .more{display:block}
+#deps .info{font-size:12.5px;color:var(--ink-2)}
+#deps .warn{margin-top:4px;font-size:12.5px;font-weight:550;color:var(--st-late)}
+
+#deps .empty::before{display:none}
+.focus-station div{width:18px;height:18px;margin:-9px 0 0 -9px;background:#f4efc0;border:4px solid #0a7a90;
+  box-shadow:0 0 0 3px #fff}
+#error{margin:0 16px 12px;font-size:13px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:0 16px 12px;font-size:12px;color:var(--ink-3)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend span::before,.dot{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);flex:none}
+#list{list-style:none;margin:0;padding:0;overflow-y:auto;border-top:1px solid var(--line)}
+#list > li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:10px 16px;
+  cursor:pointer;border-top:1px solid var(--line);transition:background-color .15s var(--ease-out)}
+#list > li:first-child{border-top:0}
+#list > li:hover,#list > li.selected{background:var(--panel-up)}
+#list > li.selected{box-shadow:inset 3px 0 0 var(--signal)}
+#list .name{font-weight:620;font-size:14px}
+#list .name .mono{font-weight:600}
+#list .where{display:block;color:var(--ink-3);font-size:12.5px;margin-top:1px}
+#list .delay{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;white-space:nowrap;color:var(--ink-2)}
+#toggle{display:none}
+
+.train-icon{background:none;border:none}
+.train{position:relative;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;
+  background:var(--c);border:2px solid #fff;box-shadow:0 1px 4px rgb(16 50 58 / .45)}
+.train.selected{width:34px;height:34px;margin:-17px 0 0 -17px;border-width:3px}
+.train svg{position:absolute;inset:0;width:100%;height:100%}
+
+/* popups sit on the light map: always light, brand type */
+.leaflet-popup-content-wrapper{border-radius:12px;box-shadow:0 0 0 1px rgb(16 50 58 / .12),0 12px 32px -12px rgb(16 50 58 / .45)}
+.leaflet-popup-content{margin:12px 14px;font:400 13px/1.5 var(--font-ui);color:#101418}
+.leaflet-popup-content b{font-size:14.5px;font-weight:650}
+.leaflet-popup-content .muted{color:#56606b}
+.leaflet-container{font-family:var(--font-ui)}
+.stop-label{font:500 12px/1.3 var(--font-ui);padding:3px 7px}
+/* Times at each stop of the selected train, always shown: small, name added
+   once zoomed in. Grey = been, amber = expected late. */
+.stop-time{font:600 11px/1 var(--font-num);padding:3px 5px;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.18);
+  background:#fff;color:#1d2330;border:1px solid #d5dde3;white-space:nowrap}
+.stop-time::before{display:none}
+.stop-time .n{font:500 11px/1 var(--font-ui);color:#51606c;margin-left:5px}
+.stop-time.been{color:#8a97a3}
+.stop-time.late{color:#9a5b00;border-color:#e8b35c}
+.stop-time.next{border-color:#1d2330}
+#map.z-far .stop-time:not(.next):not(.end){display:none}
+#map:not(.z-near) .stop-time .n{display:none}
+.chips{position:absolute;z-index:1000;top:68px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;
+  align-items:center;gap:8px;pointer-events:none;max-width:calc(100vw - 32px)}
+.chips > *{pointer-events:auto}
+.focus-chip{display:flex;align-items:center;gap:10px;max-width:100%;
+  padding:6px 6px 6px 14px;border-radius:var(--r-pill);background:var(--ink-1);color:var(--carbon);
+  font:600 12.5px/1 var(--font-ui);box-shadow:0 4px 14px rgba(0,0,0,.2);white-space:nowrap}
+.focus-chip.onboard{background:var(--signal);color:var(--on-signal)}
+.focus-chip.onboard span{overflow:hidden;text-overflow:ellipsis}
+.focus-chip button{height:26px;padding:0 10px;border-radius:var(--r-pill);border:0;background:var(--carbon);color:var(--ink-1);
+  font:600 12px var(--font-ui);cursor:pointer}
+@media (min-width:641px){.chips{left:calc(50% + 180px)}}
+/* Phones pinch to zoom; the buttons would sit under the banners. */
+@media (max-width:640px){.leaflet-control-zoom{display:none}}
+
+/* stations, drawn as squares like on Signalbox; labels sit below the trains */
+.station-icon{background:none;border:none}
+.station-icon div{width:12px;height:12px;margin:-6px 0 0 -6px;background:#f4efc0;border:3px solid #2b4f5c}
+.station-label{background:none;border:0;box-shadow:none;padding:0 0 0 4px;
+  font:600 12px/1.2 var(--font-ui);color:#1d2f38;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
+.station-label::before{display:none}
+.hide-station-labels .station-label:not(.focus-label){display:none}
+.focus-label{font-size:13px;font-weight:700}
+
+@media (max-width:640px){
+  /* A bottom sheet: drag the handle up for more trains, down for more map. */
+  #panel{top:auto;bottom:calc(12px + env(safe-area-inset-bottom));left:12px;right:12px;width:auto;
+    height:var(--sheet-h,52%);max-height:calc(100% - 68px - env(safe-area-inset-bottom))}
+  #panel.collapsed{height:auto}
+  #panel.dragging{transition:none;user-select:none}
+  #panel #deps,#panel #list{flex:1 1 auto;min-height:0;overscroll-behavior:contain}
+  #grab{display:flex;flex:none;align-items:center;justify-content:center;width:100%;height:24px;margin:0;padding:0;
+    border:0;background:none;cursor:grab;touch-action:none}
+  #grab::before{content:"";width:40px;height:5px;border-radius:3px;background:var(--line-strong)}
+  #panel.dragging #grab{cursor:grabbing}
+  /* Rows say how each train is running, so the key can go to make room. */
+  #panel .legend{display:none}
+  #panel header{padding:2px 14px 10px}
+  #panel .tabs{margin-bottom:10px}
+  #panel h1{font-size:17px}
+  #toggle{display:inline-flex;float:right}
+  #panel.collapsed #list,#panel.collapsed #deps,#panel.collapsed .legend,#panel.collapsed .pick,
+  #panel.collapsed .near-row,#panel.collapsed .field:has(#dep-op),#panel.collapsed #trip-stops{display:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#deps">Skip to departures</a>
+<header class="tt-nav">
+  <div>
+    <a class="tt-mark" href="index.html" aria-label="TrainTimes departures">TRAINTIMES</a>
+    <nav aria-label="Main">
+      <a class="nav-live" href="now.html">Live</a>
+      <a href="index.html">Tracker</a>
+      <a href="map.html" aria-current="page">Map</a>
+      <a href="history.html">Delays</a>
+      <a class="icon-btn settings-link" href="settings.html" aria-label="Settings" title="Settings">
+        <i class="ph ph-gear-six" aria-hidden="true"></i></a>
+    </nav>
+  </div>
+</header>
+<div id="map" role="region" aria-label="Map of Chiltern trains"></div>
+<!-- The banners over the map, stacked: the train you're on first, then what's shown. -->
+<div class="chips">
+<div id="onboard" class="focus-chip onboard" role="status" hidden>
+  <i class="ph ph-train" aria-hidden="true"></i><span id="onboard-text"></span>
+  <button type="button" id="onboard-follow">Follow</button>
+</div>
+<div id="focus" class="focus-chip" role="status" hidden>
+  <span id="focus-text">Only trains ahead on this line</span>
+  <button type="button" id="focus-toggle">Show all</button>
+</div>
+</div>
+<section id="panel" class="panel" aria-label="Trains">
+  <button type="button" id="grab" aria-label="Drag to resize the train list; tap to switch between half and full height"></button>
+  <header>
+    <div class="tabs" role="tablist">
+      <button type="button" class="chip" role="tab" data-tab="deps" aria-pressed="true">Departures</button>
+      <button type="button" class="chip" role="tab" data-tab="arr" aria-pressed="false">Arrivals</button>
+      <button type="button" class="chip" role="tab" data-tab="trains" aria-pressed="false">In view</button>
+      <button id="toggle" class="chip" type="button">Hide</button>
+    </div>
+    <div data-pane="deps">
+      <h1 id="dep-title">Departures</h1>
+      <div id="dep-sub" class="sub">Loading departures</div>
+      <div class="near-row">
+        <button type="button" class="chip" id="dep-near" title="Departures from the station nearest to you">
+          <i class="ph ph-navigation-arrow" aria-hidden="true"></i>Nearest station</button>
+        <span id="dep-why" class="why" aria-live="polite"></span>
+      </div>
+      <div class="pick">
+        <label class="field"><span>From</span>
+          <input type="text" id="dep-from" autocomplete="off" spellcheck="false" aria-label="From station"
+                 placeholder="Station name or code"></label>
+        <button type="button" class="chip swap" id="dep-swap" aria-label="Swap From and To" title="Swap From and To">
+          <i class="ph ph-arrows-left-right" aria-hidden="true"></i></button>
+        <label class="field"><span id="dep-to-label">To</span>
+          <input type="text" id="dep-to" autocomplete="off" spellcheck="false" aria-label="To station"
+                 placeholder="Anywhere"></label>
+        <ul class="picker-list" id="dep-from-list"></ul>
+        <ul class="picker-list" id="dep-to-list"></ul>
+      </div>
+      <label class="field" style="margin-top:8px"><span>Operator</span>
+        <select id="dep-op"><option value="">All operators</option></select></label>
+    </div>
+    <div data-pane="trip" hidden>
+      <button type="button" class="chip" id="trip-back"><i class="ph ph-arrow-left" aria-hidden="true"></i>Departures</button>
+      <h1 id="trip-title">Your train</h1>
+      <div id="trip-sub" class="trip-sub"></div>
+    </div>
+    <div data-pane="trains" hidden>
+      <h1>Live trains</h1>
+      <div id="status" class="sub">Loading trains</div>
+      <label class="field" style="margin-top:12px"><span>Operator</span>
+        <select id="op"><option value="">All operators</option></select></label>
+    </div>
+  </header>
+  <div id="error" class="note error" hidden></div>
+  <div class="legend">
+    <span style="--c: var(--ontime)">On time or early</span>
+    <span style="--c: var(--late)">1-9 min late</span>
+    <span style="--c: var(--verylate)">10+ min late</span>
+    <span style="--c: var(--unknown)">Not departed</span>
+  </div>
+  <ol id="deps" data-pane="deps"><li class="empty">Loading departures</li></ol>
+  <ul id="list" data-pane="trains" hidden></ul>
+  <ol id="trip-stops" data-pane="trip" hidden aria-label="Stops and times"></ol>
+</section>
+
+<script>
+// On the published static site, data comes from JSON files written by
+// nrfeeds.publish instead of the live API, and private pages are hidden.
+const STATIC = document.documentElement.dataset.static === "1";
+const staticFile = path => {
+  const url = new URL(path, location.origin);
+  const q = url.searchParams;
+  switch (url.pathname) {
+    case "/api/board": return `data/${q.get("kind") === "arrivals" ? "arrivals" : "board"}-${(q.get("station") || "BCS").toUpperCase()}.json`;
+    case "/api/route": return `data/routes/${encodeURIComponent(q.get("train_id") || "")}.json`;
+    default: return `data/${url.pathname.slice(5)}.json`;       // /api/trains -> data/trains.json
+  }
+};
+// Every station also has an hourly, slimmed board in data/all/, used when
+// there's no full one. Slim boards list later stops as [CRS, "HH:MM" UTC].
+window.stationNames = window.stationNames || new Map();
+function unslim(data) {
+  if (!data.slim) return data;
+  for (const d of data.departures) {
+    d.calls = d.calls || [];
+    d.warnings = d.warnings || [];
+    d.calls_before = d.calls_before || [];
+    d.calls_after = (d.calls_after || []).map(([crs, hm]) => {
+      let planned = `${d.planned.slice(0, 11)}${hm}:00+00:00`;
+      if (new Date(planned) < new Date(d.planned)) planned = new Date(new Date(planned).getTime() + 864e5).toISOString();
+      return { crs, name: stationNames.get(crs) || crs, planned };
+    });
+  }
+  return data;
+}
+async function getJSON(path, options = {}) {
+  if (!STATIC) return (await fetch(path, options)).json();
+  // The published site: live from the server when it's up, else the snapshot.
+  const live = await liveJSON(path);
+  if (live) return live;
+  if (path.startsWith("/api/board")) {
+    window.fullBoards = window.fullBoards ||
+      fetch("data/config.json", { cache: "no-store" }).then(r => r.json()).then(c => new Set(c.full || []));
+    const station = (new URL(path, location.origin).searchParams.get("station") || "BCS").toUpperCase();
+    const file = staticFile(path);
+    const res = await fetch((await fullBoards).has(station) ? file : file.replace("data/", "data/all/"),
+                            { cache: "no-store" });
+    return unslim(await res.json());
+  }
+  const data = await (await fetch(staticFile(path), { cache: "no-store" })).json();
+  return data;
+}
+
+// The live server has new positions every few seconds; the published copy only
+// every few minutes, and in between trains move by themselves (see glide).
+// (On the published site that's live from the server too, when it's up; the
+// snapshot it falls back on only changes every few minutes, so no faster than a minute.)
+const REFRESH_MS = 10000;
+let snapshotAt = 0;
+const VERY_LATE_MINUTES = 10;
+const css = getComputedStyle(document.documentElement);
+const colour = name => css.getPropertyValue(`--${name}`).trim();
+
+const map = L.map("map", { zoomControl: false });
+L.control.zoom({ position: "topright" }).addTo(map);
+// The Signalbox-style base map: OpenFreeMap's vector tiles (no key needed),
+// recoloured here.
+const ATTRIBUTION = '<a href="https://openfreemap.org">OpenFreeMap</a> ' +
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | ' +
+  "Train data: Network Rail | Stations: NaPTAN (DfT)";
+const SIGNALBOX = {
+  background: "#ffffff", water: "#b9d3e0", park: "#cfe6df", building: "#d3e2ea",
+  residential: "#f6f9fa", road: "#45b7cc", minorRoad: "#a9dde6", casing: null, rail: "#34495a",
+  label: "#2b3a45", halo: "#ffffff",
+};
+
+function recolour(style, p) {
+  for (const l of style.layers) {
+    const id = l.id, paint = (l.paint = l.paint || {});
+    const hide = () => { (l.layout = l.layout || {}).visibility = "none"; };
+    // The styles' own railways only appear when zoomed right in; they're
+    // replaced by the layer added below.
+    if (l.type === "line" && /rail/.test(id)) { hide(); continue; }
+    if (id === "background" && p.background) paint["background-color"] = p.background;
+    if (id === "water" && p.water) paint["fill-color"] = p.water;
+    if (/^(park|landcover_wood)$/.test(id) && p.park) paint["fill-color"] = p.park;
+    if (id === "building" && p.building) paint["fill-color"] = p.building;
+    if (id === "landuse_residential" && p.residential) paint["fill-color"] = p.residential;
+    if (p.road && l.type === "line" && /^(highway|tunnel_motorway|road_)/.test(id)) {
+      if (/casing|subtle/.test(id) && p.casing === null) { hide(); continue; }
+      const minor = /minor|path|pier/.test(id);
+      paint["line-color"] = minor ? p.minorRoad || p.road : p.road;
+      if (minor) paint["line-width"] = ["interpolate", ["linear"], ["zoom"], 11, 0.5, 14, 1.5, 18, 6];
+    }
+    if (p.label && l.type === "symbol" && paint["text-color"] !== undefined) {
+      paint["text-color"] = p.label;
+      paint["text-halo-color"] = p.halo;
+    }
+  }
+  // Main-line railways, from far out, above the roads and below the labels.
+  const firstLabel = style.layers.findIndex(l => l.type === "symbol");
+  style.layers.splice(firstLabel, 0, {
+    id: "trains-railway", type: "line", source: "openmaptiles", "source-layer": "transportation",
+    minzoom: 6,
+    filter: ["all", ["==", ["get", "class"], "rail"], ["!", ["has", "service"]]],
+    layout: { "line-join": "round", "line-cap": "round" },
+    paint: { "line-color": p.rail,
+             "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.8, 10, 1.6, 13, 2.5, 16, 4] },
+  });
+  return style;
+}
+
+function hasWebGL() {
+  try { return !!document.createElement("canvas").getContext("webgl"); } catch (e) { return false; }
+}
+
+async function addBaseMap() {
+  if (!window.L.maplibreGL || !hasWebGL()) {
+    // The vector map library didn't load, or this browser can't draw it:
+    // fall back to plain OpenStreetMap.
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19, className: "base-tiles",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+    return;
+  }
+  const style = await (await fetch("https://tiles.openfreemap.org/styles/positron")).json();
+  baseLayer = L.maplibreGL({ style: recolour(style, SIGNALBOX), attribution: ATTRIBUTION }).addTo(map);
+  baseLayer.getMaplibreMap().on("load", () => applyFocus());
+}
+let baseLayer = null;
+
+// With a train selected, the background map stays but the rest of the
+// railway network goes, so its route stands out on its own.
+function showNetwork(on) {
+  const gl = baseLayer?.getMaplibreMap?.();
+  try { if (gl?.getLayer("trains-railway")) gl.setLayoutProperty("trains-railway", "visibility", on ? "visible" : "none"); }
+  catch (e) { /* style still loading: applied on load */ }
+  if (on !== stationsShown) { stationsShown = on; drawStations(); }
+}
+let stationsShown = true;
+
+// Stations: squares, with names once zoomed in. They get their own pane,
+// above the highlighted route (400) but below the trains (600), so names
+// never cover a train.
+// With every station in the country, only those in view are drawn, and only
+// once zoomed in far enough to read them.
+const STATION_LABEL_ZOOM = 13, STATION_ZOOM = 10, MAX_STATIONS = 400;
+map.createPane("stations").style.zIndex = 450;
+const stationLayer = L.layerGroup().addTo(map);
+let allStations = [];
+async function loadStations() {
+  try {
+    allStations = (await getJSON("/api/stations")).stations || [];
+    allStations.forEach(st => stationNames.set(st.crs, st.name));
+    drawStations();
+  } catch (err) { /* stations are decoration */ }
+}
+function drawStations() {
+  stationLayer.clearLayers();
+  if (map.getZoom() < STATION_ZOOM || !stationsShown) return;
+  const view = map.getBounds().pad(0.1);
+  allStations.filter(st => view.contains([st.lat, st.lon])).slice(0, MAX_STATIONS).forEach(st =>
+    L.marker([st.lat, st.lon], {
+      icon: L.divIcon({ className: "station-icon", iconSize: [0, 0], html: "<div></div>" }),
+      interactive: false, keyboard: false, pane: "stations",
+    }).bindTooltip(st.name, { permanent: true, direction: "right", offset: [6, 0],
+                              className: "station-label", pane: "stations" }).addTo(stationLayer));
+}
+const labelVisibility = () => document.getElementById("map")
+  .classList.toggle("hide-station-labels", map.getZoom() < STATION_LABEL_ZOOM);
+map.on("zoomend", labelVisibility);
+
+map.fitBounds([[51.50, -1.95], [52.50, -0.15]], panelPadding());   // Marylebone to Birmingham
+
+const markers = new Map();
+let trainsById = new Map();
+let selected = new URLSearchParams(location.search).get("train");
+// Opened from a Next train tile (only=1): just that train, whatever Settings say.
+const linkedTrain = selected, linkedFocus = new URLSearchParams(location.search).get("only") ? "mine" : null;
+// ...and where you get on and off (on=MYB&off=BCS), for the trip panel.
+let tripOn = new URLSearchParams(location.search).get("on"), tripOff = new URLSearchParams(location.search).get("off");
+// The train the trip panel is about: from the link, or the one you're on.
+let tripTrain = linkedTrain, tripFocus = linkedFocus, autoFollow = true;
+// Opened for one train (a Next tile, or Show on map on the board): the trip panel.
+let tripMode = !!linkedTrain;         // a train in the link: its trip panel
+let routeLayer = null;
+// With a train selected: its route's shape, to keep only the trains ahead of
+// it on the same line going the same way (they're what could hold it up).
+// Which trains show then comes from Settings (map_focus), unless the chip on
+// the map has switched it for this train.
+let routeGeo = null, focusOverride = null;
+const focusMode = () => focusOverride || ttSettings.get("map_focus");
+let fittedOnce = false;
+let pendingPopup = null;
+
+function delayClass(t) {
+  if (t.state === "waiting" || t.delay_minutes == null) return "unknown";
+  if (t.delay_minutes <= 0) return "ontime";      // on time or early
+  return t.delay_minutes < VERY_LATE_MINUTES ? "late" : "verylate";
+}
+
+function delayText(t) {
+  if (t.state === "waiting") return "Not yet departed";
+  if (t.delay_minutes == null) return t.status || "Unknown";
+  return delayLabel(t.delay_minutes);
+}
+
+const time = iso => iso ? new Date(iso).toLocaleTimeString("en-GB",
+  { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" }) : "-";
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+// Trains are named by when and where they started, as on station boards.
+function trainName(t) {
+  if (t.origin) return `${time(t.origin_dep_time)} ${t.origin}`;
+  return /^[05]/.test(t.headcode || "") ? "Empty train (not in service)" : "Train (timetable not found)";
+}
+
+function whereText(t) {
+  switch (t.state) {
+    case "waiting": return `Waiting at ${t.location}`;
+    case "at": return `At ${t.location}${t.platform ? `, platform ${t.platform}` : ""}`;
+    case "moving": return t.next_location ? `${t.location} → ${t.next_location}` : `Left ${t.location}`;
+    default: return `Left ${t.location}`;
+  }
+}
+
+function popupHtml(t) {
+  const due = t.planned_time ? `, due ${time(t.planned_time)}` : "";
+  const event = t.event ? `${t.event === "ARRIVAL" ? "Arrived" : "Departed"} ${time(t.event_time)}${due}` : "";
+  const left = t.origin_left_time ? ` (left ${time(t.origin_left_time)})` : "";
+  const next = t.next_location && t.next_expected
+    ? `<br>Next: ${esc(t.next_location)}, expected ${time(t.next_expected)}` : "";
+  return `<b>${esc(trainName(t))}</b>` +
+         (t.destination ? ` <span class="muted">to ${esc(t.destination)}</span>` : "") +
+         (t.operator ? `<br><span class="muted">${esc(t.operator)}</span>` : "") +
+         (t.origin ? `<br><span class="muted">Due to leave ${time(t.origin_dep_time)}${left}</span>` : "") +
+         `<br>${esc(whereText(t))}` +
+         `<br><span class="dot" style="--c:${colour(delayClass(t))}"></span>${esc(delayText(t))}` +
+         (event ? ` · ${esc(event)}` : "") + next +
+         (t.state === "moving" ? "<br><small class=\"muted\">Position between stations is estimated from the timetable</small>" : "");
+}
+
+function icon(t) {
+  const sel = t.train_id === selected;
+  const arrow = t.heading == null ? `<circle cx="12" cy="12" r="3" fill="#fff"/>`
+    : `<path d="M12 5 L17.5 17 L12 14.2 L6.5 17 Z" fill="${delayClass(t) === "late" ? "#1d2330" : "#fff"}"
+             transform="rotate(${t.heading} 12 12)"/>`;
+  return L.divIcon({
+    className: "train-icon",
+    iconSize: [0, 0],
+    popupAnchor: [0, -14],
+    html: `<div class="train${sel ? " selected" : ""}" style="--c:${colour(delayClass(t))}">` +
+          `<svg viewBox="0 0 24 24">${arrow}</svg></div>`,
+  });
+}
+
+function showError(message) {
+  const box = document.getElementById("error");
+  box.textContent = message || "";
+  box.hidden = !message;
+}
+
+// popup: open this train's popup. Not when its icon was tapped: Leaflet opens
+// it then, and opening it here too makes Leaflet's toggle close it again.
+async function select(id, { zoom = false, popup = true } = {}) {
+  selected = id;
+  const url = new URL(location);
+  id ? url.searchParams.set("train", id) : url.searchParams.delete("train");
+  if (id !== tripTrain) url.searchParams.delete("only");
+  history.replaceState(null, "", url);
+  for (const [tid, m] of markers) {
+    const t = trainsById.get(tid);
+    if (t) m.setIcon(icon(t)).setZIndexOffset(tid === id ? 1000 : 0);
+  }
+  document.querySelectorAll("#list li").forEach(li => li.classList.toggle("selected", li.dataset.id === id));
+  // The same train again (a refresh): keep its line up until the new one is
+  // ready, so it never blinks out. Another train: clear it now.
+  const previous = routeLayer;
+  if (previous && routeGeo?.id !== id) { map.removeLayer(previous); routeLayer = null; }
+  if (routeGeo?.id !== id) { routeGeo = null; focusOverride = id === tripTrain ? tripFocus : null; }
+  if (!id) { applyFocus(); return; }
+
+  const t = trainsById.get(id);
+  // Zoom to the train until its route arrives (then the whole route is fitted).
+  if (t && zoom && routeGeo?.id !== id) map.setView([t.lat, t.lon], Math.max(map.getZoom(), 11));
+  if (popup) markers.get(id)?.openPopup();
+  try {
+    const route = await getJSON(`/api/route?train_id=${encodeURIComponent(id)}`);
+    if (selected !== id || !route.points) return;
+    const next = route.calls.find(c => !c.passed && !c.here);
+    if (routeLayer) map.removeLayer(routeLayer);
+    routeLayer = L.layerGroup([
+      L.polyline(route.points, { color: colour("route-casing"), weight: 8, opacity: .8 }),
+      L.polyline(route.points, { color: colour("route"), weight: 5, opacity: 1 }),
+      ...route.calls.filter(c => c.lat != null).map((c, n, all) => L.circleMarker([c.lat, c.lon], {
+          radius: 5, color: colour("route-casing"), weight: 2, fillColor: "#fff", fillOpacity: 1,
+        }).bindTooltip(stopTime(c, c === next), { permanent: true, direction: "right", offset: [6, 0],
+                       className: stopTimeClass(c, c === next) + (n === 0 || n === all.length - 1 ? " end" : "") })),
+    ]).addTo(map);
+    markers.get(id)?.setZIndexOffset(1000);
+    if (tripMode && id === tripTrain) showTrip(route);
+    const firstLoad = !routeGeo;
+    routeGeo = { id, ...shape(route.points), calls: route.calls };
+    applyFocus();
+    // The whole journey in view, clear of the panel.
+    if (tripMode && id === tripTrain) fitSection(route, firstLoad);
+    else if (firstLoad && zoom) map.fitBounds(routeGeo.bounds, { maxZoom: 13, ...panelPadding() });
+    if (firstLoad) refresh();         // fetch trains along the whole line, not just in view
+  } catch (err) { /* the route is a nice-to-have */ }
+}
+
+function stopText(c) {
+  if (c.actual) {
+    const d = c.delay_minutes;
+    const late = d ? ` (${Math.abs(d)} ${d < 0 ? "early" : "late"})` : "";
+    return `${esc(c.name)} · ${time(c.actual)}${late}`;
+  }
+  const exp = c.expected && c.expected !== c.planned ? `, exp ${time(c.expected)}` : "";
+  return `${esc(c.name)} · ${time(c.planned)}${exp}`;
+}
+
+// The time at each stop, always on show: when it got there, or when it's
+// expected (or due).
+// ---- The trip panel: one train, from where you get on to where you get off ----
+// ---- Following a trip: the map stays close in on the train ----
+// About 10 km of its track, a little behind it and more ahead, moving on
+// every few km as it goes, unless you've moved the map yourself (Recentre
+// brings it back). Before it leaves: from where you get on.
+const BEHIND_M = 3000, AHEAD_M = 7000, STEP_M = 3000;
+let sectionShown = null, userMoved = false, fitting = false;
+function trainPoint(route) {
+  const m = markers.get(tripTrain);
+  if (m && trainsById.has(tripTrain)) return m.getLatLng();
+  const calls = (route.calls || []).filter(c => c.lat != null);
+  const at = calls.reduce((k, c, n) => (c.passed || c.here ? n : k), -1);
+  const c = calls[at >= 0 ? at : Math.max(0, calls.findIndex(c => c.crs === tripOn))];
+  return c ? L.latLng(c.lat, c.lon) : null;
+}
+function fitSection(route, force) {
+  if (!routeGeo) return;
+  const pos = trainPoint(route);
+  if (!pos) return;
+  const along = project(routeGeo, pos.lat, pos.lng).along;
+  const key = Math.floor(along / STEP_M);
+  if (!force && (userMoved || key === sectionShown)) return;
+  sectionShown = key;
+  const bounds = L.latLngBounds([pos]);
+  routeGeo.along.forEach((a, i) => {
+    if (a >= along - BEHIND_M && a <= along + AHEAD_M) bounds.extend((route.points || [])[i]);
+  });
+  fitting = true;
+  map.fitBounds(bounds.pad(0.15), { maxZoom: 15, ...panelPadding() });
+  setTimeout(() => { fitting = false; }, 800);
+}
+// Your own drags, pinches and scrolls count as moving the map; ours don't.
+// Following picks up again a little after you stop.
+const RESUME_MS = 20000;
+let movedAt = 0;
+const youMoved = () => { userMoved = true; movedAt = Date.now(); };
+map.on("dragstart", youMoved);
+document.getElementById("map").addEventListener("wheel", () => { if (!fitting) youMoved(); }, { passive: true });
+document.getElementById("map").addEventListener("touchstart", e => { if (e.touches.length > 1) youMoved(); }, { passive: true });
+
+// Following a train: keep it in the middle of the part of the map you can
+// see (above the panel on a phone, beside it on a computer), every update.
+function keepTrainCentred() {
+  if (!tripMode || selected !== tripTrain) return;
+  if (userMoved && Date.now() - movedAt < RESUME_MS) return;
+  userMoved = false;
+  const m = markers.get(tripTrain);
+  if (!m || !trainsById.has(tripTrain)) return;
+  const size = map.getSize(), pad = panelPadding();
+  const tl = pad.paddingTopLeft || [0, 0], br = pad.paddingBottomRight || [0, 0];
+  const centre = L.point((tl[0] + size.x - br[0]) / 2, (tl[1] + size.y - br[1]) / 2);
+  const at = map.latLngToContainerPoint(m.getLatLng());
+  const off = at.subtract(centre);
+  if (Math.abs(off.x) < 12 && Math.abs(off.y) < 12) return;          // near enough: no jiggle
+  fitting = true;
+  map.panBy(off, { animate: true, duration: 0.8, easeLinearity: 0.5 });
+  setTimeout(() => { fitting = false; }, 900);
+}
+
+function showTrip(route) {
+  const panel = document.getElementById("panel");
+  panel.classList.add("trip-mode");
+  document.querySelectorAll("#panel [data-pane]").forEach(el => { el.hidden = el.dataset.pane !== "trip"; });
+  const calls = route.calls || [];
+  // Where you got on; or, following the train you're on, where it's got to.
+  const here = calls.reduce((k, c, n) => (c.passed || c.here ? n : k), 0);
+  const onAt = tripOn ? Math.max(0, calls.findIndex(c => c.crs === tripOn)) : here;
+  let offAt = calls.findIndex((c, n) => n > onAt && c.crs === tripOff);
+  if (offAt < 0 && tripAlt) offAt = calls.findIndex((c, n) => n > onAt && c.crs === tripAlt);
+  if (offAt < 0) offAt = calls.length - 1;
+  const on = calls[onAt], off = calls[offAt];
+  if (!on || !off) {
+    // An empty train (going to or from a depot): no stops to show.
+    $id("trip-title").textContent = `${route.origin || "?"} to ${route.destination || "?"}`;
+    $id("trip-sub").innerHTML = `<span>${esc(route.operator || "")}: not carrying passengers (empty train)</span>`;
+    $id("trip-stops").innerHTML = "";
+    return;
+  }
+  $id("trip-title").textContent = `${on.name} to ${off.name}`;
+  const t = trainsById.get(route.train_id) || {};
+  const late = route.delay_minutes ?? t.delay_minutes;
+  const status = route.cancelled ? "Cancelled" : late > 0 ? delayLabel(late) : late < 0 ? delayLabel(late) : late === 0 ? "On time" : "";
+  const statusColour = route.cancelled || late >= VERY_LATE_MINUTES ? colour("verylate") : late > 0 ? colour("late") : colour("ontime");
+  $id("trip-sub").innerHTML = `<button type="button" class="chip recentre" id="recentre" title="Back to where the train is">` +
+      `<i class="ph ph-crosshair" aria-hidden="true"></i>Recentre</button>` +
+    `<span class="t">${time(on.planned)}</span>` +
+    `<span class="now" id="trip-now">Now ${time(new Date().toISOString())}</span>` +
+    `<span>arrives ${time(off.expected || off.actual || off.planned)}</span>` +
+    (status ? `<span class="st" style="color:${statusColour}">${esc(status)}</span>` : "") +
+    (on.platform ? `<span>Plat ${esc(on.platform)}</span>` : "") +
+    `<span>${esc(route.operator || "")}${route.destination ? `, to ${esc(route.destination)}` : ""}</span>`;
+  const next = calls.find(c => !c.passed && !c.here);
+  $id("trip-stops").innerHTML = calls.map((c, n) => {
+    const been = c.passed || !!c.actual;
+    const lateHere = !c.actual && c.expected && c.expected !== c.planned;
+    const shown = c.actual || c.expected || c.planned;
+    const tag = n === onAt ? "Get on" : n === offAt ? "Get off" : c.here ? "Train is here" : "";
+    return `<li class="${been ? "been" : ""}${c === next ? " next" : ""}${n === onAt || n === offAt ? " yours" : ""}` +
+      `${n < onAt || n > offAt ? " outside" : ""}">` +
+      `<span class="tm${lateHere ? " late" : ""}">${time(shown)}${time(shown) !== time(c.planned) ? `<s>${time(c.planned)}</s>` : ""}</span>` +
+      `<span><span class="n">${esc(c.name)}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</span>` +
+      `<span class="pl">${c.platform ? `Plat ${esc(c.platform)}` : ""}</span></li>`;
+  }).join("");
+  // Open part-way so the trip and its first stops show above the map.
+  if (!panel.dataset.tripOpened && window.innerWidth <= 640) { panel.dataset.tripOpened = "1"; peekSheet(0.4); }
+  $id("trip-stops").children[Math.max(onAt, calls.indexOf(next) - 1)]?.scrollIntoView({ block: "nearest" });
+}
+document.getElementById("trip-sub").addEventListener("click", e => {
+  if (!e.target.closest("#recentre") || !routeGeo) return;
+  userMoved = false;
+  sectionShown = null;
+  select(tripTrain, { popup: false });          // refetch and fit the current stretch
+});
+document.getElementById("trip-back").onclick = () => {
+  tripMode = false;
+  autoFollow = false;            // you've gone back: don't jump to your train again
+  document.getElementById("panel").classList.remove("trip-mode");
+  select(null);
+  showTab("deps");
+};
+// Keep the trip's times live.
+setInterval(() => { if (tripMode && selected === tripTrain) select(selected, { popup: false }); }, 30000);
+// The time now, on the trip panel, so the stop times read against it.
+setInterval(() => { const el = document.getElementById("trip-now"); if (el) el.textContent = `Now ${time(new Date().toISOString())}`; }, 10000);
+
+// Any train you pick: its trip panel (every stop and time) and its route, with
+// the trains that could hold it up. You chose it, so don't jump back to yours.
+function openTrip(id) {
+  autoFollow = false;
+  tripTrain = id;
+  tripOn = null; tripOff = null; tripAlt = null;
+  tripFocus = null;                     // what Settings say to show alongside it
+  tripMode = true;
+  userMoved = false;
+  sectionShown = null;
+  delete document.getElementById("panel").dataset.tripOpened;
+  select(id, { zoom: true, popup: false });
+}
+
+// Follow a train in the trip panel: where it's got to, on to your home (or
+// work) station if it goes there, else the end of its run.
+let tripAlt = null;         // if the train doesn't go to tripOff, try this
+function followTrain(t) {
+  tripTrain = t.train_id;
+  userMoved = false;
+  sectionShown = null;
+  tripOn = null;
+  const home = ttSettings.get("home"), work = ttSettings.get("work");
+  tripOff = home || work;
+  tripAlt = home && work ? work : null;
+  tripFocus = "mine";
+  tripMode = true;
+  delete document.getElementById("panel").dataset.tripOpened;
+  select(t.train_id, { zoom: true, popup: false });
+}
+
+function stopWhen(c) {
+  if (c.actual) return time(c.actual);
+  return time(c.expected || c.planned);
+}
+function stopTime(c, isNext) {
+  return `${stopWhen(c)}<span class="n">${esc(c.name)}</span>`;
+}
+function stopTimeClass(c, isNext) {
+  const late = !c.actual && c.expected && c.expected !== c.planned;
+  return `stop-time${c.passed || c.actual ? " been" : ""}${late ? " late" : ""}${isNext ? " next" : ""}`;
+}
+function zoomClass() {
+  const z = map.getZoom(), el = document.getElementById("map");
+  el.classList.toggle("z-far", z < 8);
+  el.classList.toggle("z-near", z >= 12);
+}
+map.on("zoomend", zoomClass);
+zoomClass();
+
+// ---- Only the trains that could hold up the selected one ----
+// Distances in metres on a flat projection, fine at these scales.
+function flat(lat, lon, lat0) {
+  const r = Math.PI / 180;
+  return [lon * r * 6371000 * Math.cos(lat0 * r), lat * r * 6371000];
+}
+function shape(points) {
+  const lat0 = points[0][0], xy = points.map(p => flat(p[0], p[1], lat0));
+  const along = [0];
+  for (let i = 1; i < xy.length; i++) along.push(along[i - 1] + Math.hypot(xy[i][0] - xy[i - 1][0], xy[i][1] - xy[i - 1][1]));
+  return { lat0, xy, along, bounds: L.latLngBounds(points) };
+}
+// How far a point is from the line, how far along it, and which way the line runs there.
+function project(geo, lat, lon) {
+  const [px, py] = flat(lat, lon, geo.lat0);
+  let best = { dist: Infinity, along: 0, bearing: 0 };
+  for (let i = 1; i < geo.xy.length; i++) {
+    const [ax, ay] = geo.xy[i - 1], [bx, by] = geo.xy[i];
+    const dx = bx - ax, dy = by - ay, len2 = dx * dx + dy * dy;
+    const f = len2 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2)) : 0;
+    const d = Math.hypot(px - (ax + f * dx), py - (ay + f * dy));
+    if (d < best.dist) best = { dist: d, along: geo.along[i - 1] + f * Math.sqrt(len2),
+                                bearing: (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360 };
+  }
+  return best;
+}
+const ON_LINE_M = 300;        // this close to the line counts as on it
+function aheadOnLine(t) {
+  if (!routeGeo || t.train_id === selected) return true;
+  const me = trainsById.get(selected);
+  const mine = me ? project(routeGeo, me.lat, me.lon).along : 0;
+  const p = project(routeGeo, t.lat, t.lon);
+  if (p.dist > ON_LINE_M || p.along < mine - 100) return false;
+  if (t.heading != null) {
+    const turn = Math.abs(((t.heading - p.bearing) % 360 + 540) % 360 - 180);
+    return turn < 60;
+  }
+  // Standing still: going our way if it's heading for a stop still ahead of it.
+  const ahead = new Set(routeGeo.calls.filter(c => c.lat != null && project(routeGeo, c.lat, c.lon).along > p.along)
+    .map(c => c.name));
+  return ahead.has(t.next_location) || ahead.has(t.destination);
+}
+function focusing() { return !!(routeGeo && selected && focusMode() !== "all"); }
+function keepTrain(t) {
+  return !focusing() || t.train_id === selected || (focusMode() === "ahead" && aheadOnLine(t));
+}
+function applyFocus() {
+  const on = focusing(), mode = focusMode();
+  let shown = 0;
+  const kept = new Map();
+  const keeps = id => {
+    if (!kept.has(id)) { const t = trainsById.get(id); kept.set(id, !!(t && keepTrain(t))); }
+    return kept.get(id);
+  };
+  for (const [id, m] of markers) {
+    const keep = !on || keeps(id);
+    shown += keep && id !== selected ? 1 : 0;
+    const el = m.getElement();
+    if (el) el.style.display = keep ? "" : "none";
+    if (!keep && m.isPopupOpen()) m.closePopup();
+  }
+  document.querySelectorAll("#list > li").forEach(li => { li.hidden = on && !keeps(li.dataset.id); });
+  showNetwork(!(routeGeo && selected) || ttSettings.get("map_network"));
+  const chip = document.getElementById("focus");
+  chip.hidden = !routeGeo || !selected;
+  document.getElementById("focus-text").textContent = mode === "all" ? "Showing every train"
+    : mode === "mine" ? (selected === myTrain?.train_id ? "Your train" : "Only this train")
+    : shown ? `${shown} train${shown === 1 ? "" : "s"} ahead on this line` : "No trains ahead on this line";
+  document.getElementById("focus-toggle").textContent = mode === "all" ? (tripMode ? "Only this train" : "Only those ahead") : "Show all trains";
+}
+document.getElementById("focus-toggle").onclick = e => {
+  e.stopPropagation();
+  focusOverride = focusMode() === "all" ? (tripMode ? "mine" : "ahead") : "all";
+  applyFocus();
+  refresh();
+};
+
+function render(data) {
+  showError(data.error);
+  const trains = data.trains || [];
+  trainsById = new Map(trains.map(t => [t.train_id, t]));
+
+  for (const t of trains) {
+    let m = markers.get(t.train_id);
+    if (!m) {
+      m = L.marker([t.lat, t.lon]).addTo(map);
+      m.on("click", () => openTrip(t.train_id));
+      markers.set(t.train_id, m);
+    }
+    const at = onBoard(t) || glidePosition(t) || t;     // where it is now, not when the data was made
+    m.setLatLng([at.lat, at.lon]).setIcon(icon(t));
+    // Pan so the whole popup shows, clear of the nav bar.
+    m.bindPopup(popupHtml(t), { autoPanPaddingTopLeft: [16, 72], autoPanPaddingBottomRight: [16, 16] });
+    if (m.isPopupOpen()) m.setPopupContent(popupHtml(t));
+  }
+  for (const [id, m] of markers) {
+    if (!trainsById.has(id)) { map.removeLayer(m); markers.delete(id); }
+  }
+  // A train picked from Departures may only now have come into view.
+  if (pendingPopup && trainsById.has(pendingPopup)) {
+    markers.get(pendingPopup)?.openPopup();
+    pendingPopup = null;
+  }
+
+  const list = document.getElementById("list");
+  list.replaceChildren(...trains.map(t => {
+    const li = document.createElement("li");
+    li.dataset.id = t.train_id;
+    li.classList.toggle("selected", t.train_id === selected);
+    li.innerHTML = `<span class="what"><span class="name">${esc(trainName(t))}</span>` +
+      (t.destination ? ` <span class="muted">to ${esc(t.destination)}</span>` : "") +
+      `<span class="where">${t.operator ? `${esc(t.operator)}. ` : ""}${esc(whereText(t))}</span></span>` +
+      `<span class="delay"><span class="dot" style="--c:${colour(delayClass(t))}"></span>${esc(delayText(t))}</span>` +
+      `<div class="more"><div class="note">Loading its stops</div></div>`;
+    li.classList.toggle("open", openTrain === t.train_id);
+    li.onclick = e => {
+      if (e.target.closest(".more")) return;
+      const opening = openTrain !== t.train_id;
+      openTrain = opening ? t.train_id : null;
+      document.querySelectorAll("#list > li").forEach(x => x.classList.remove("open"));
+      li.classList.toggle("open", opening);
+      if (opening) openTrip(t.train_id);           // its stops and times, on the trip panel
+    };
+    if (openTrain === t.train_id) showJourney(li, t.train_id, null);
+    return li;
+  }));
+
+  applyFocus();
+
+  const latest = data.latest_message ? `feed ${time(data.latest_message)}` : "no feed messages yet";
+  document.getElementById("status").textContent = data.total > trains.length
+    ? `Showing ${trains.length} of ${data.total} trains in view: zoom in for the rest. ${latest}`
+    : `${trains.length} train${trains.length === 1 ? "" : "s"} in view. ${latest}`;
+
+  const op = document.getElementById("op");
+  if (data.operators && op.options.length !== data.operators.length + 1) {
+    const chosen = op.value;
+    op.innerHTML = `<option value="">All operators</option>` +
+      data.operators.map(o => `<option value="${esc(o.code)}">${esc(o.name)}</option>`).join("");
+    op.value = chosen;
+  }
+
+  if (!fittedOnce && trains.length) {
+    fittedOnce = true;
+    if (selected && trainsById.has(selected)) select(selected, { zoom: true, popup: !linkedFocus });
+  }
+}
+
+// Keep trains out from under the panel: it sits on the left on wide
+// screens and along the bottom on phones.
+function panelPadding() {
+  const panel = document.getElementById("panel").getBoundingClientRect();
+  const gap = 40;
+  return window.innerWidth <= 600
+    ? { paddingTopLeft: [gap, gap], paddingBottomRight: [gap, window.innerHeight - panel.top + gap] }
+    : { paddingTopLeft: [panel.right + gap, gap], paddingBottomRight: [gap, gap] };
+}
+
+// Only the trains in (and just around) the part of the map on screen.
+function trainQuery() {
+  const b = map.getBounds().pad(0.2);
+  if (focusing()) b.extend(routeGeo.bounds.pad(0.05));
+  const q = new URLSearchParams({ bbox: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]
+    .map(v => v.toFixed(3)).join(",") });
+  const op = document.getElementById("op").value;
+  if (op) q.set("op", op);
+  return q;
+}
+
+// The static copy has every train in one file, so it filters here instead.
+function filterHere(data, q) {
+  const [west, south, east, north] = q.get("bbox").split(",").map(Number);
+  const all = data.trains || [];
+  const operators = [...new Map(all.filter(t => t.operator_code)
+    .map(t => [t.operator_code, { code: t.operator_code, name: t.operator }])).values()]
+    .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  const trains = all.filter(t => (!q.get("op") || t.operator_code === q.get("op")) &&
+    t.lon >= west && t.lon <= east && t.lat >= south && t.lat <= north);
+  return { ...data, trains: trains.slice(0, 600), total: trains.length, operators };
+}
+
+async function refresh() {
+  if (STATIC && !liveUp()) {
+    if (Date.now() - snapshotAt < 60e3) return;
+    snapshotAt = Date.now();
+  }
+  let data;
+  try {
+    const q = trainQuery();
+    data = await getJSON(`/api/trains?${q}`, { cache: "no-store" });
+    if (STATIC) data = filterHere(data, q);
+  } catch (err) {
+    // Keep the last known positions on screen.
+    showError("Can't reach the live trains right now. They'll reappear when the connection is back.");
+    return;
+  }
+  render(data);
+}
+
+// Tapping the map's background: a train you're following stays (leave with
+// Back); otherwise the selection clears, but not if the tap was the start of
+// a double tap or a pinch, which are just zooming.
+let clearing;
+map.on("click", () => {
+  if (tripMode) return;
+  clearTimeout(clearing);
+  clearing = setTimeout(() => select(null), 350);
+});
+map.on("dblclick zoomstart movestart", () => clearTimeout(clearing));
+let moved;
+map.on("moveend", () => {
+  drawStations();
+  clearTimeout(moved);
+  moved = setTimeout(refresh, 350);
+});
+document.getElementById("op").onchange = refresh;
+
+document.getElementById("toggle").onclick = () => setSheet(
+  document.getElementById("panel").classList.contains("collapsed") ? sheetHeight() : "collapsed");
+
+// ---- On phones the panel is a bottom sheet: drag its handle to resize ----
+// Heights are fractions of the window; dragging it low folds it down to the
+// tabs. Remembered between visits.
+const SHEET_MIN = 150;          // px: any lower and it folds away
+function sheetHeight() { return Number(localStorage.getItem("tt_sheet")) || 0.52; }
+// A height for now, not remembered as your choice.
+function peekSheet(height) {
+  const panel = document.getElementById("panel");
+  panel.classList.remove("collapsed");
+  document.getElementById("toggle").textContent = "Hide";
+  panel.style.setProperty("--sheet-h", `${Math.round(height * 100)}%`);
+}
+function setSheet(height) {
+  const panel = document.getElementById("panel");
+  const collapsed = height === "collapsed";
+  panel.classList.toggle("collapsed", collapsed);
+  document.getElementById("toggle").textContent = collapsed ? "Show" : "Hide";
+  if (!collapsed) {
+    panel.style.setProperty("--sheet-h", `${Math.round(height * 100)}%`);
+    localStorage.setItem("tt_sheet", height);
+  }
+}
+(function () {
+  const panel = document.getElementById("panel"), grab = document.getElementById("grab");
+  let start = null;
+  grab.addEventListener("pointerdown", e => {
+    start = { y: e.clientY, h: panel.getBoundingClientRect().height, moved: false };
+    grab.setPointerCapture(e.pointerId);
+    panel.classList.add("dragging");
+  });
+  grab.addEventListener("pointermove", e => {
+    if (!start) return;
+    const h = start.h + (start.y - e.clientY);
+    if (Math.abs(start.y - e.clientY) > 4) start.moved = true;
+    if (!start.moved) return;
+    panel.classList.remove("collapsed");
+    panel.style.setProperty("--sheet-h", `${Math.max(h, 60)}px`);
+  });
+  const end = e => {
+    if (!start) return;
+    panel.classList.remove("dragging");
+    if (!start.moved) {
+      // A tap: fold open, or switch between half and nearly full height.
+      setSheet(panel.classList.contains("collapsed") ? sheetHeight() : sheetHeight() > 0.7 ? 0.52 : 0.88);
+    } else {
+      const h = panel.getBoundingClientRect().height;
+      setSheet(h < SHEET_MIN ? "collapsed" : Math.min(h / window.innerHeight, 0.95));
+    }
+    start = null;
+  };
+  grab.addEventListener("pointerup", end);
+  grab.addEventListener("pointercancel", end);
+  grab.addEventListener("keydown", e => {
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+    e.preventDefault();
+    setSheet(Math.max(0.25, Math.min(0.95, sheetHeight() + (e.key === "ArrowUp" ? 0.1 : -0.1))));
+  });
+  setSheet(sheetHeight());
+})();
+
+// ---- Departures: the panel as a board for one station, the map focused on it ----
+const params = new URLSearchParams(location.search);
+const $id = id => document.getElementById(id);
+let depStation = null, depTo = null, focusMarker = null;
+const stationByCrs = crs => allStations.find(st => st.crs === crs);
+const nameOfCrs = crs => stationByCrs(crs)?.name || crs;
+
+
+let depKind = "departures";
+function showTab(tab) {
+  document.querySelectorAll("#panel .tabs [data-tab]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.tab === tab)));
+  const pane = tab === "arr" ? "deps" : tab;
+  document.querySelectorAll("#panel [data-pane]").forEach(el => { el.hidden = el.dataset.pane !== pane; });
+  if (tab !== "trains") {
+    const kind = tab === "arr" ? "arrivals" : "departures";
+    if (kind !== depKind) {
+      depKind = kind;
+      openDeparture = null;
+      $id("dep-to-label").textContent = kind === "arrivals" ? "Coming from" : "To";
+      loadDepartures();
+    }
+  }
+}
+document.querySelectorAll("#panel .tabs [data-tab]").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+
+function depStatus(d) {
+  if (d.state === "cancelled") return ["verylate", "Cancelled"];
+  if (d.state === "arrived" && depKind === "arrivals")
+    return [d.delay_minutes > 0 ? (d.delay_minutes < VERY_LATE_MINUTES ? "late" : "verylate") : "ontime", "Arrived"];
+  if (d.state === "departed") return [d.delay_minutes > 0 ? (d.delay_minutes < VERY_LATE_MINUTES ? "late" : "verylate") : "ontime", "Departed"];
+  if (d.delay_minutes == null) return ["unknown", d.state === "not_set_up" ? "Not set up" : "No report"];
+  if (d.delay_minutes < 0 && d.state === "running") return ["ontime", delayLabel(d.delay_minutes)];
+  if (d.delay_minutes <= 0) return ["ontime", "On time"];
+  return [d.delay_minutes < VERY_LATE_MINUTES ? "late" : "verylate", delayLabel(d.delay_minutes)];
+}
+
+function noteRow(text) {
+  const li = document.createElement("li");
+  li.className = "note-row";
+  li.textContent = text;
+  return li;
+}
+// A journey with changes: when it leaves and gets in, where you change, and
+// how the first train is running.
+function journeyRow(j, board) {
+  const live = routeFirstTrain(j, board);
+  const [cls, text] = live ? depStatus(live) : ["unknown", "Planned"];
+  const li = document.createElement("li");
+  li.className = "journey";
+  li.style.setProperty("--c", colour(cls));
+  const expected = live?.expected && time(live.expected) !== time(live.planned);
+  li.innerHTML =
+    `<span class="t">${expected ? `<span class="exp">${time(live.expected)}</span><s>${time(j.departs)}</s>` : time(j.departs)}</span>` +
+    `<span><span class="d">Arrives ${time(j.arrives)}</span><span class="o">${esc(routeSummary(j))}</span></span>` +
+    `<span class="s" style="color:${colour(cls)}">${esc(text)}${live?.platform ? `<small>Plat ${esc(live.platform)}</small>` : ""}</span>` +
+    `<div class="legs">${routeLegsHtml(j, board)}</div>`;
+  li.onclick = () => { if (live?.train_id) focusTrain(live); };
+  return li;
+}
+
+let depLoads = 0;          // only the latest load draws
+async function loadDepartures() {
+  if (!depStation) return;
+  const n = ++depLoads;
+  let data;
+  try {
+    data = await getJSON(`/api/board?${new URLSearchParams({ station: depStation, to: "all", limit: "40", kind: depKind })}`,
+                         { cache: "no-store" });
+  } catch (err) { return; }
+  if (n !== depLoads) return;
+  const list = $id("deps");
+  if (data.error) { list.innerHTML = `<li class="empty">${esc(data.error)}</li>`; return; }
+  const arriving = depKind === "arrivals";
+  // Operators on this board, for the filter.
+  const opSel = $id("dep-op");
+  const opInfo = operators.find(o => o.code === opSel.value);
+  const rows = data.departures
+    .filter(d => !depTo || (arriving ? (d.calls_before || []).includes(depTo) : d.calls_after.some(c => c.crs === depTo)))
+    .filter(d => !opSel.value || d.operator_code === opSel.value).slice(0, 20);
+  $id("dep-title").textContent = `${data.station} ${arriving ? "arrivals" : "departures"}`;
+  const which = depTo ? `${arriving ? "From" : "To"} ${nameOfCrs(depTo)}` : "All trains";
+  $id("dep-sub").textContent = `${which}${opSel.value ? `, ${opSel.selectedOptions[0].text}` : ""}. ` +
+    (data.slim ? `Hourly snapshot from ${time(data.generated_at)}` : `Updated ${time(data.generated_at)}`);
+  if (!rows.length && opInfo && !opInfo.stations.includes(depStation)) {
+    list.innerHTML = `<li class="empty">${esc(opInfo.name)} doesn't call at ${esc(data.station)}. ` +
+      `Pick one of its stations in From: the suggestions now only show its ${opInfo.stations.length} stations.</li>`;
+    return;
+  }
+  // With a destination: journeys with a change too, when nothing goes direct
+  // or a change gets there sooner.
+  const routes = depTo && !arriving && !opSel.value ? await findRoutes(depStation, depTo) : [];
+  if (n !== depLoads) return;
+  const directArrival = d => {
+    const c = d.calls_after.find(c => c.crs === depTo);
+    const late = d.state !== "cancelled" && d.delay_minutes > 0 ? d.delay_minutes : 0;
+    return c ? new Date(c.planned).getTime() + late * 60e3 : Infinity;
+  };
+  const firstDirect = rows.filter(d => d.state !== "cancelled").map(directArrival).sort((a, b) => a - b)[0] ?? Infinity;
+  const faster = routes.filter(j => j.changes && new Date(j.arrives).getTime() < firstDirect - 2 * 60e3).slice(0, rows.length ? 1 : 4);
+  if (!rows.length && faster.length) {
+    list.replaceChildren(noteRow(`No direct trains to ${nameOfCrs(depTo)}: fastest with a change`),
+                         ...faster.map(j => journeyRow(j, data.departures)));
+    return;
+  }
+  if (!rows.length && guessedTo && depTo === guessedTo && !userChose) {
+    // Guessed from where you are, but nothing goes straight there: show everything.
+    const name = nameOfCrs(depTo);
+    guessedTo = null;
+    setDepartures(depStation, null, false);
+    $id("dep-why").textContent += ` (no direct trains to ${name}, so all departures)`;
+    return;
+  }
+  if (!rows.length) {
+    list.innerHTML = `<li class="empty">No ${arriving ? "arrivals" : "direct trains"}` +
+      `${depTo ? ` ${arriving ? "from" : "to"} ${esc(nameOfCrs(depTo))}` : ""}${opSel.value ? " for that operator" : ""} in the next few hours.</li>`;
+    return;
+  }
+  const extra = faster.length ? [noteRow("Faster with a change"), ...faster.map(j => journeyRow(j, data.departures)),
+                                  noteRow(`Direct to ${nameOfCrs(depTo)}`)] : [];
+  list.replaceChildren(...extra, ...rows.map(d => {
+    const [cls, text] = depStatus(d);
+    const expected = d.expected && time(d.expected) !== time(d.planned) && d.state !== "departed";
+    const li = document.createElement("li");
+    li.style.setProperty("--c", colour(cls));
+    li.classList.toggle("selected", !!d.train_id && d.train_id === selected);
+    const key = d.planned + d.origin;
+    li.classList.toggle("open", openDeparture === key);
+    li.innerHTML =
+      `<span class="t">${expected ? `<span class="exp">${time(d.expected)}</span><s>${time(d.planned)}</s>` : time(d.planned)}</span>` +
+      (arriving
+        ? `<span><span class="d">From ${esc(d.origin)}</span>` +
+          `<span class="o">${d.destination === data.station ? "Terminates here" : `Going on to ${esc(d.destination)}`}` +
+          `${d.operator ? `. ${esc(d.operator)}` : ""}</span></span>`
+        : `<span><span class="d">${esc(d.destination)}${d.via ? `, circular via ${esc(d.via)}` : ""}</span>` +
+          `<span class="o">${d.origin === data.station ? "Starts here" : `From ${esc(d.origin)} ${time(d.origin_dep_time)}`}` +
+          `${d.operator ? `. ${esc(d.operator)}` : ""}</span></span>`) +
+      `<span class="s" style="color:${colour(cls)}">${esc(text)}${d.platform ? `<small>Plat ${esc(d.platform)}</small>` : ""}</span>` +
+      `<div class="more">${plannedJourneyHtml(d, depStation)}</div>`;
+    li.onclick = e => {
+      if (e.target.closest(".more")) return;
+      const opening = openDeparture !== key;
+      openDeparture = opening ? key : null;
+      document.querySelectorAll("#deps > li").forEach(x => x.classList.remove("open"));
+      li.classList.toggle("open", opening);
+      if (opening) {
+        focusTrain(d);
+        showJourney(li, d.train_id, depStation);
+      }
+    };
+    if (openDeparture === key) showJourney(li, d.train_id, depStation);
+    return li;
+  }));
+}
+
+let openDeparture = null, openTrain = null;
+
+// Fill a row's details with the whole journey once it has come in.
+async function showJourney(li, trainId, mine) {
+  if (!trainId) return;
+  const r = await journeyFor(trainId);
+  const box = li.querySelector(".more");
+  if (r && box && li.isConnected && li.classList.contains("open")) box.innerHTML = journeyHtml(r, mine);
+}
+
+// Show a departure's train on the map: its route, and the train itself once it's in view.
+async function focusTrain(d) {
+  if (!d.train_id) return;
+  showError("");
+  if (trainsById.has(d.train_id)) return select(d.train_id, { zoom: true });
+  pendingPopup = d.train_id;
+  await select(d.train_id, { popup: false });
+  const route = await getJSON(`/api/route?train_id=${encodeURIComponent(d.train_id)}`);
+  if (route.points?.length) map.fitBounds(L.latLngBounds(route.points), { maxZoom: 12, ...panelPadding() });
+}
+
+function focusStation(fly = true) {
+  const st = stationByCrs(depStation);
+  if (!st) return;
+  if (focusMarker) map.removeLayer(focusMarker);
+  focusMarker = L.marker([st.lat, st.lon], {
+    icon: L.divIcon({ className: "station-icon focus-station", iconSize: [0, 0], html: "<div></div>" }),
+    interactive: false, keyboard: false, pane: "stations", zIndexOffset: 1000,
+  }).bindTooltip(st.name, { permanent: true, direction: "right", offset: [10, 0],
+                            className: "station-label focus-label", pane: "stations" }).addTo(map);
+  // Centre it in the part of the map the panel doesn't cover.
+  if (fly && !selected) map.fitBounds(L.latLng(st.lat, st.lon).toBounds(5000), { maxZoom: 12, ...panelPadding() });
+}
+
+function setDepartures(station, to, fly = true) {
+  depStation = station;
+  depTo = to || null;
+  // Not written into the address: reopening the map should start from where
+  // you are (or your settings), not the last station looked at.
+  fromPicker?.set(depStation);
+  toPicker?.set(depTo);
+  focusStation(fly);
+  loadDepartures();
+}
+
+let fromPicker, toPicker;
+let operators = [];
+// The stations to offer in From and To: every one, or just the chosen operator's.
+function offeredStations() {
+  const op = operators.find(o => o.code === $id("dep-op").value);
+  return op ? allStations.filter(st => op.stations.includes(st.crs)) : allStations;
+}
+$id("dep-op").onchange = loadDepartures;
+$id("dep-swap").onclick = () => { if (depTo) { chosen(); setDepartures(depTo, depStation); } };
+
+// ---- Where you are: the station you most likely want to leave from ----
+// Near work: from work, towards home. Near home: from home, towards work on
+// a weekday morning, otherwise anywhere (you might be going somewhere else).
+// Anywhere else: your nearest station, towards home.
+let userChose = false, guessedTo = null;
+const chosen = () => { userChose = true; $id("dep-why").textContent = ""; };
+function useLocation(asked) {
+  if (!navigator.geolocation || !window.isSecureContext) {
+    if (asked) $id("dep-why").textContent = "Location needs the secure (https) site.";
+    return;
+  }
+  if (asked) $id("dep-why").textContent = "Finding you…";
+  navigator.geolocation.getCurrentPosition(p => {
+    showHere(p.coords);
+    if (!asked && userChose) return;        // you've picked a station since
+    const trip = likelyTrip({ lat: p.coords.latitude, lon: p.coords.longitude }, allStations);
+    if (!trip) { $id("dep-why").textContent = asked ? "No station within 30 km of you." : ""; return; }
+    if (asked) { ttSettings.set("use_location", true); userChose = false; }
+    watchMe();
+    guessedTo = trip.to;
+    setDepartures(trip.from, trip.to);
+    $id("dep-why").textContent = trip.why;
+  }, err => {
+    if (asked) $id("dep-why").textContent = err.code === 1 ? "Location is blocked for this site." : "Couldn't find you.";
+  }, { maximumAge: 5 * 60e3, timeout: 10e3 });
+}
+$id("dep-near").onclick = () => useLocation(true);
+
+// Follow you as you move (once location is allowed).
+let watching = null, hereFix = null;
+function watchMe() {
+  if (watching !== null || !navigator.geolocation || !window.isSecureContext) return;
+  watching = navigator.geolocation.watchPosition(p => showHere(p.coords), () => {},
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+}
+
+// ---- Trains keep moving between updates ----
+// Each train's `move` is the stretch of track it's on (or about to leave on),
+// with when it left and should arrive at its current lateness, and how far
+// along it may go before its next report. Positions are recomputed from that
+// every couple of seconds.
+// You on the train you picked: when you're on its line, near where we think
+// it is, your phone is the best guide to where it really is.
+function onBoard(t) {
+  // Only once we know you're on it: moving at train speed, matched to this
+  // train (spotMyTrain). Standing on the platform, you're on its line too, and
+  // it would be drawn at the station before it gets there.
+  // Once it's known, wherever you are on its line is where it is, stopped or
+  // not: reports lag behind, and our estimate from them can be well out.
+  if (!hereFix || t.train_id !== selected || !routeGeo || routeGeo.id !== t.train_id || Date.now() - hereFix.at > 60e3) return null;
+  if (!myLocked || myTrain?.train_id !== t.train_id) return null;
+  const me = project(routeGeo, hereFix.lat, hereFix.lon);
+  return me.dist <= 250 ? { lat: hereFix.lat, lon: hereFix.lon, heading: me.bearing } : null;
+}
+function glide() {
+  const now = Date.now();
+  let turned = false;
+  for (const [id, m] of markers) {
+    const t = trainsById.get(id);
+    if (!t) continue;
+    const p = onBoard(t) || glidePosition(t, now);
+    if (!p) continue;
+    m.setLatLng([p.lat, p.lon]);
+    t._shown = p;
+    if (p.heading != null && Math.abs(((p.heading - (t.heading ?? p.heading)) + 540) % 360 - 180) > 15) {
+      t.heading = Math.round(p.heading);
+      m.setIcon(icon(t));          // a new icon is shown again: hide it again below if it should be
+      turned = true;
+    }
+  }
+  if (turned && focusing()) applyFocus();
+  keepTrainCentred();
+}
+setInterval(() => { glide(); spotMyTrain(); }, 2000);
+
+// ---- Which train you're on ----
+// Found from your location: moving at train speed, with a train where you
+// are going your way, twice running. Then kept: slowing, stopping at a signal
+// or a station, or another train's icon being nearer at a junction doesn't
+// change it. Let go when you're well off its line for half a minute (you got
+// off), or it's gone from the map (finished) for 10 minutes. Shared with the
+// Tracker's "On your train" (tt_mytrain), so both pages agree.
+const MINE_KEY = "tt_mytrain", OFF_LINE_M = 500, OFF_LINE_CHECKS = 15, GONE_MS = 10 * 60e3;
+let myTrain = null, myTrainSeen = 0, myLocked = false, offLine = 0, mineLastSeen = 0;
+function savedMine() {
+  try {
+    const m = JSON.parse(localStorage.getItem(MINE_KEY) || "null");
+    return m && Date.now() - m.at < 3 * 3600e3 ? m : null;
+  } catch (e) { return null; }
+}
+function lockMine(t) {
+  const before = savedMine();
+  myLocked = true; offLine = 0; mineLastSeen = Date.now();
+  localStorage.setItem(MINE_KEY, JSON.stringify({ id: t.train_id, headcode: t.headcode,
+    boardedAt: before?.id === t.train_id ? before.boardedAt : null, at: Date.now() }));
+}
+function unlockMine() {
+  myLocked = false; myTrain = null; myTrainSeen = 0; offLine = 0;
+  localStorage.removeItem(MINE_KEY);
+}
+function spotMyTrain() {
+  const chip = document.getElementById("onboard");
+  const saved = savedMine();
+  if (saved && (!myLocked || saved.id !== myTrain?.train_id)) {
+    // Already known (here or on the Tracker).
+    myLocked = true; myTrainSeen = 2; offLine = 0; mineLastSeen = Date.now();
+    myTrain = trainsById.get(saved.id) || { train_id: saved.id, headcode: saved.headcode };
+  } else if (!saved && myLocked) {
+    myLocked = false; myTrain = null; myTrainSeen = 0;      // let go on the Tracker ("Not my train")
+  }
+  if (myLocked) {
+    const now = trainsById.get(myTrain.train_id);
+    if (now) { myTrain = now; mineLastSeen = Date.now(); }
+    else if (Date.now() - mineLastSeen > GONE_MS) unlockMine();
+    // Off its line for a while: you've got off.
+    if (myLocked && hereFix && Date.now() - hereFix.at < 60e3 && routeGeo?.id === myTrain.train_id) {
+      const d = project(routeGeo, hereFix.lat, hereFix.lon).dist;
+      offLine = d > OFF_LINE_M ? offLine + 1 : 0;
+      if (offLine >= OFF_LINE_CHECKS) unlockMine();
+      else if (d <= 250) sharePosition(myTrain.train_id, hereFix);      // so others see where it really is
+    }
+  } else {
+    const best = spotTrain(hereFix, [...trainsById.values()]);
+    // The same train twice in a row before saying so.
+    myTrainSeen = best && best.train_id === myTrain?.train_id ? myTrainSeen + 1 : (best ? 1 : 0);
+    myTrain = best;
+    if (myTrain && myTrainSeen >= 2) lockMine(myTrain);
+  }
+  const known = myLocked && trainsById.has(myTrain?.train_id);
+  // Follow it, unless you've gone back to departures.
+  if (known && autoFollow && tripTrain !== myTrain.train_id) followTrain(myTrain);
+  const following = tripMode && selected === myTrain?.train_id;
+  chip.hidden = !known || following;
+  if (!chip.hidden) {
+    document.getElementById("onboard-text").textContent =
+      `You're on the ${trainName(myTrain)}${myTrain.destination ? ` to ${myTrain.destination}` : ""}`;
+  }
+}
+document.getElementById("onboard-follow").onclick = () => { if (myTrain) { autoFollow = true; followTrain(myTrain); } };
+
+// You, as a blue dot (with how sure the phone is), whenever we have a fix.
+let hereDot = null, hereRing = null;
+function showHere(c) {
+  const at = [c.latitude, c.longitude];
+  hereFix = nextFix(hereFix, c);
+  if (!hereDot) {
+    hereRing = L.circle(at, { radius: c.accuracy || 50, color: "#1a73e8", weight: 1, opacity: .4,
+                              fillColor: "#1a73e8", fillOpacity: .1, interactive: false }).addTo(map);
+    hereDot = L.circleMarker(at, { radius: 7, color: "#fff", weight: 2.5, fillColor: "#1a73e8", fillOpacity: 1 })
+      .bindTooltip("You", { direction: "top", offset: [0, -8] }).addTo(map);
+  }
+  hereDot.setLatLng(at);
+  hereRing.setLatLng(at).setRadius(Math.min(c.accuracy || 50, 2000));
+}
+
+async function setupDepartures() {
+  await loadStations();
+  operators = (await getJSON("/api/operators").catch(() => ({}))).operators || [];
+  $id("dep-op").innerHTML = `<option value="">All operators</option>` +
+    operators.map(o => `<option value="${esc(o.code)}">${esc(o.name)}</option>`).join("");
+  fromPicker = stationPicker($id("dep-from"), $id("dep-from-list"), {
+    stations: offeredStations, onPick: crs => { if (crs) { chosen(); setDepartures(crs, depTo); } } });
+  toPicker = stationPicker($id("dep-to"), $id("dep-to-list"), {
+    stations: offeredStations, optional: true, emptyLabel: "Anywhere",
+    onPick: crs => { chosen(); setDepartures(depStation, crs, false); } });
+  let station = params.get("station"), to = params.get("to");
+  if (!station) {
+    const config = await getJSON("/api/config").catch(() => ({}));
+    const token = localStorage.getItem("tt_token");
+    const prefs = ACCOUNTS && token
+      ? (await accountJSON(`/api/account?token=${encodeURIComponent(token)}`).catch(() => ({}))).subscription?.prefs
+      : null;
+    const mine = ttSettings.get("board_from");
+    station = mine || prefs?.board_station || config.station || "BCS";
+    to = mine ? ttSettings.get("board_to") : prefs ? prefs.board_to : config.towards;
+  }
+  // A train in the link (from the board's "Show on map") wins over the station.
+  setDepartures(station, to, !params.get("train"));
+  // Then, if you allow it, the station where you are.
+  if (await locationAllowed()) watchMe();        // the blue dot, following you
+  if (!params.get("station") && !params.get("train")) {
+    if (await locationAllowed()) useLocation(false);
+  }
+  setInterval(loadDepartures, 30000);
+}
+
+addBaseMap();
+setupDepartures();
+// A train in the link: draw its route and fit the map to it straight away,
+// even if it's outside the map's first view.
+if (selected) {
+  // From a tile: fold the panel down so the journey fills the screen (not remembered).
+  if (tripMode && window.innerWidth <= 640) setSheet("collapsed");   // opened part-way once the trip loads
+  select(selected, { zoom: true, popup: false });
+}
+labelVisibility();
+refresh();
+setInterval(refresh, REFRESH_MS);
+</script>
+</body>
+</html>
