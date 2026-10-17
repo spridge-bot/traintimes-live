@@ -1,1 +1,1 @@
-{"train_id":"195R351018","points":[[53.74415,-0.34568]],"calls":[],"origin":"Hull","destination":"Hull Station Sidings","operator":"Northern","operator_code":"NT","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"195R351018","points":[[53.74415,-0.34568]],"calls":[],"origin":"Hull","destination":"Hull Station Sidings","operator":"Northern","operator_code":"NT","delay_minutes":17,"where":"Left Hull","cancelled":false,"terminated":false}

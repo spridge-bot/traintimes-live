@@ -1,1 +1,1 @@
-{"train_id":"125G701018","points":[[54.9684,-1.61728],[54.9684,-1.61728]],"calls":[],"origin":"Newcastle","destination":"Newcastle","operator":"Northern","operator_code":"NT","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"125G701018","points":[[54.9684,-1.61728],[54.9684,-1.61728]],"calls":[],"origin":"Newcastle","destination":"Newcastle","operator":"Northern","operator_code":"NT","delay_minutes":0,"where":"Left High Level Bridge Jn","cancelled":false,"terminated":false}
