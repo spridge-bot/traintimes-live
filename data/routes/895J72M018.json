@@ -1,1 +1,1 @@
-{"train_id":"895J72M018","points":[[51.38543,1.372]],"calls":[],"origin":"Margate","destination":"Ramsgate Traction Mtnce","operator":"Southeastern","operator_code":"SE","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"895J72M018","points":[[51.38543,1.372]],"calls":[],"origin":"Margate","destination":"Ramsgate Traction Mtnce","operator":"Southeastern","operator_code":"SE","delay_minutes":2,"where":"Left Margate","cancelled":false,"terminated":false}

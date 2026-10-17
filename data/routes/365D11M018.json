@@ -1,1 +1,1 @@
-{"train_id":"365D11M018","points":[[53.56927,-2.88119]],"calls":[],"origin":"Ormskirk","destination":"Kirkdale Carriage Cleaning","operator":"Merseyrail","operator_code":"ME","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"365D11M018","points":[[53.56927,-2.88119]],"calls":[],"origin":"Ormskirk","destination":"Kirkdale Carriage Cleaning","operator":"Merseyrail","operator_code":"ME","delay_minutes":0,"where":"Left Ormskirk","cancelled":false,"terminated":false}

@@ -1,1 +1,1 @@
-{"train_id":"865B901018","points":[[50.78656,-0.67618]],"calls":[],"origin":"Bognor Regis","destination":"Bognor Regis  Sidings    (Tps)","operator":"Southern","operator_code":"SN","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"865B901018","points":[[50.78656,-0.67618]],"calls":[],"origin":"Bognor Regis","destination":"Bognor Regis  Sidings    (Tps)","operator":"Southern","operator_code":"SN","delay_minutes":32,"where":"Left Bognor Regis","cancelled":false,"terminated":false}

@@ -1,1 +1,1 @@
-{"train_id":"865W84M018","points":[[50.96925,-1.35008],[50.96925,-1.35008]],"calls":[],"origin":"Eastleigh","destination":"Eastleigh","operator":"South Western Railway","operator_code":"SW","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"865W84M018","points":[[50.96925,-1.35008],[50.96925,-1.35008]],"calls":[],"origin":"Eastleigh","destination":"Eastleigh","operator":"South Western Railway","operator_code":"SW","delay_minutes":9,"where":"Left Eastleigh","cancelled":false,"terminated":false}
