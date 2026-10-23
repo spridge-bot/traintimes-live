@@ -1,1 +1,1 @@
-{"train_id":"655G75M024","points":[[52.47782,-1.90021]],"calls":[],"origin":"Birmingham New Street","destination":"Soho M&Ee Maintenance Depot","operator":"West Midlands Trains","operator_code":"LM","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"655G75M024","points":[[52.47782,-1.90021]],"calls":[],"origin":"Birmingham New Street","destination":"Soho M&Ee Maintenance Depot","operator":"West Midlands Trains","operator_code":"LM","delay_minutes":6,"where":"Left Birmingham New Street","cancelled":false,"terminated":false}
