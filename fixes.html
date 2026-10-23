@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en" data-static="1" data-api="https://ians-mac-mini.tail9eb485.ts.net:8443">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0c0e">
+<title>Fixes | TrainTimes</title>
+<script>try{var t=localStorage.getItem("tt-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preload" href="assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/brand.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<script src="assets/theme.js" defer></script>
+<script src="assets/settings.js"></script>
+<script src="assets/accounts.js"></script>
+<style>
+/* Fixes: when other trains got in the way of yours, and what could be done.
+   Ideas first (the repeating patterns, most frequent first), then your trains'
+   totals, then every occurrence as the record behind them. */
+#main{padding-top:28px;padding-bottom:48px;max-width:760px}
+h1{font-size:clamp(28px,7vw,36px);letter-spacing:-.035em;font-weight:700}
+.lede{margin:6px 0 0;color:var(--ink-3);font-size:14.5px;line-height:1.5;max-width:62ch}
+.group{margin-top:28px}
+.group>h2{font:650 12px/1 var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-4);margin:0 0 10px 4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-panel);overflow:hidden}
+.idea{padding:16px;border-top:1px solid var(--line)}
+.idea:first-child{border-top:0}
+.idea .head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.idea .n{font:700 20px/1 var(--font-num);color:var(--st-late)}
+.idea .n.big{color:var(--st-bad)}
+.idea .what{font:600 15px/1.35 var(--font-ui)}
+.idea .stats{margin-top:4px;font:450 12.5px/1.4 var(--font-num);color:var(--ink-3)}
+.idea p{margin:10px 0 0;font-size:14px;line-height:1.5;color:var(--ink-2)}
+.idea p::before{content:"Idea: ";font-weight:650;color:var(--ink-1)}
+.trains li,.occ li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:11px 16px;border-top:1px solid var(--line);font-size:14px}
+.trains li:first-child,.occ li:first-child{border-top:0}
+.trains ol,.occ ol{list-style:none;margin:0;padding:0}
+.trains b,.occ b{font-weight:650}
+.trains .lost,.occ .lost{font:650 14px/1.2 var(--font-num);color:var(--st-late);text-align:right;white-space:nowrap}
+.occ small,.trains small{grid-column:1/-1;color:var(--ink-3);font-size:12.5px;line-height:1.45}
+.occ .day{display:block;padding:6px 16px;font:650 12px/1.3 var(--font-ui);color:var(--ink-3);background:var(--panel-up);border-top:1px solid var(--line)}
+.empty{padding:18px;color:var(--ink-3);font-size:14px;line-height:1.5}
+.fix{padding:14px 16px;border-top:1px solid var(--line)}
+.fix:first-child{border-top:0}
+.fix .head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.fix .tag{font:650 11px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;padding:4px 7px;border-radius:var(--r-pill);
+  background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c)}
+.fix .per{margin-left:auto;font:650 13px/1 var(--font-num);color:var(--c);white-space:nowrap}
+.fix .w{font:600 14.5px/1.35 var(--font-ui);flex-basis:100%}
+.fix p{margin:6px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)}
+.fix .stats{margin-top:4px;font:450 12px/1.4 var(--font-num);color:var(--ink-3)}
+.sub-h{margin:16px 0 8px 4px;font:650 14px/1.3 var(--font-ui);color:var(--ink-2)}
+.total{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:13px 16px;border-top:1px solid var(--line);font-size:14px}
+.total:first-child{border-top:0}
+.total .net{font:700 16px/1.1 var(--font-num);text-align:right;white-space:nowrap}
+.total .net.up{color:var(--st-bad)} .total .net.down{color:var(--st-ok)}
+.total small{grid-column:1/-1;color:var(--ink-3);font-size:12.5px;line-height:1.45}
+.split{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.split span{font:500 11.5px/1 var(--font-num);color:var(--ink-3);border:1px solid var(--line);border-radius:var(--r-pill);padding:4px 7px}
+.note{margin-top:22px;color:var(--ink-3);font-size:13px;line-height:1.55;max-width:66ch}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="tt-nav">
+  <div>
+    <a class="tt-mark" href="now.html" aria-label="TrainTimes: your next train">TRAINTIMES</a>
+    <nav aria-label="Main">
+      <a class="nav-live" href="now.html">Live</a>
+      <a href="map.html">Map</a>
+      <a href="history.html">Delays</a>
+      <a href="fixes.html" aria-current="page">Fixes</a>
+      <a class="icon-btn settings-link" href="settings.html" aria-label="Settings" title="Settings">
+        <i class="ph ph-gear-six" aria-hidden="true"></i></a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <h1>Fixes</h1>
+  <p class="lede" id="lede">When your trains were slowed by another train on the line, and what could be done about it.</p>
+
+  <section class="group" aria-labelledby="g-ideas">
+    <h2 id="g-ideas">What keeps happening</h2>
+    <div class="card" id="ideas"><div class="empty">Loading…</div></div>
+  </section>
+
+  <section class="group" aria-labelledby="g-tt">
+    <h2 id="g-tt">Timetable fixes across Chiltern</h2>
+    <p class="lede" id="tt-lede">Every Chiltern train, every section: where the timetable is too tight (delay built
+      in), slack (time that could come out) or unpredictable, ranked by the minutes a day each accounts for.</p>
+    <h3 class="sub-h">Your journeys</h3>
+    <div class="card" id="yours"><div class="empty">Loading…</div></div>
+    <h3 class="sub-h">Routes</h3>
+    <div class="card" id="routes"><div class="empty">Loading…</div></div>
+    <h3 class="sub-h">Section by section</h3>
+    <div class="card" id="tt"><div class="empty">Loading…</div></div>
+  </section>
+
+  <section class="group" aria-labelledby="g-pairs">
+    <h2 id="g-pairs">Trains that get in each other's way</h2>
+    <div class="card" id="pairs"><div class="empty">Loading…</div></div>
+  </section>
+
+  <section class="group trains" aria-labelledby="g-trains">
+    <h2 id="g-trains">Your trains</h2>
+    <div class="card"><ol id="trains"></ol></div>
+  </section>
+
+  <section class="group occ" aria-labelledby="g-occ">
+    <h2 id="g-occ">Every time</h2>
+    <div class="card"><ol id="occ"></ol></div>
+  </section>
+
+  <p class="note">How it's found: Network Rail's signalling feed shows each train moving section by section. Where
+    yours took noticeably longer than trains usually do, the train that had just left the section ahead of it was
+    in its way ("caught up behind"); with no train there, it was held at a signal for something else, such as a
+    junction or a train crossing its path. The gap is how far apart the two trains were planned, and actually were,
+    at the nearest timing point both passed. Ideas are suggestions from the pattern, not Network Rail's plans.</p>
+</main>
+
+<script>
+const STATIC = document.documentElement.dataset.static === "1";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const lost = s => s < 60 ? `${s} s` : `${Math.round(s / 6) / 10} min`;
+const day = iso => new Date(iso + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+const clock = iso => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" });
+let names = new Map();
+const route = j => { const [a, b] = j.split("-"); return `${names.get(a) || a} → ${names.get(b) || b}`; };
+const kindOf = (k, other) => k === "caught_up" ? `caught up behind ${other}` : "held at signals";
+
+async function load() {
+  try {
+    const stations = await (STATIC ? fetch("data/stations.json") : fetch("/api/stations")).then(r => r.json());
+    names = new Map((stations.stations || []).filter(s => s.crs).map(s => [s.crs, s.name]));
+  } catch (e) { /* codes will do */ }
+  let data = STATIC ? await liveJSON("/api/fixes") : null;
+  if (!data) data = await fetch(STATIC ? "data/fixes.json" : "/api/fixes", { cache: "no-store" }).then(r => r.json()).catch(() => null);
+  if (!data) { $("ideas").innerHTML = `<div class="empty">Couldn't load this just now.</div>`; return; }
+  if (data.days) $("lede").textContent += ` Last ${data.days} day${data.days === 1 ? "" : "s"} recorded.`;
+
+  const pats = data.patterns || [];
+  $("ideas").innerHTML = pats.length ? pats.map(p => `
+    <div class="idea">
+      <div class="head"><span class="n${p.times >= 3 ? " big" : ""}">${p.times}×</span>
+        <span class="what">${esc(p.leaves)} ${esc(route(p.journey))}: ${esc(kindOf(p.kind, p.other))}${p.other_kind && p.kind === "caught_up" ? ` (${esc(p.other_kind)})` : ""} near ${esc(p.place)}</span></div>
+      <div class="stats">${p.days} day${p.days === 1 ? "" : "s"} · ${lost(p.avg_lost)} lost each time · ${lost(p.total_lost)} in all${p.planned_gap != null ? ` · planned ${p.planned_gap} min apart` : ""}${p.avg_other_late != null && p.kind === "caught_up" ? ` · ${esc(p.other)} ${p.avg_other_late > 0 ? `+${p.avg_other_late}` : p.avg_other_late} min` : ""}</div>
+      <p>${esc(p.idea)}</p>
+    </div>`).join("")
+    : `<div class="empty">Nothing recorded yet. Each of your regular trains is checked through the day; when another
+       train slows one down, it shows here.</div>`;
+
+  const tt = data.timetable || {};
+  const TYPES = { tight: ["Too tight", "var(--st-bad)", "min delay a day"], slack: ["Slack", "var(--st-ok)", "min a day could be saved"],
+                  dwell: ["Long stops", "var(--st-late)", "min delay a day"], unpredictable: ["Unpredictable", "var(--st-late)", "min delay a day"] };
+  const m = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  if (tt.days) $("tt-lede").textContent += ` ${tt.trains} train journeys over ${tt.days} day${tt.days === 1 ? "" : "s"}; ${tt.sections} sections judged.`;
+  // Per trip: delay built into the timetable (+) and time it gives away (spare).
+  const total = (title, r) => {
+    const net = r.net > 0 ? `+${r.net} min` : `${r.net} min`;
+    return `<div class="total"><span><b>${esc(title)}</b> · ${esc(r.cls)} trains</span>
+      <span class="net ${r.net > 0 ? "up" : r.net < 0 ? "down" : ""}">${net}</span>
+      <small>Per trip: ${r.built_in} min of delay built into the timetable, ${r.spare} min spare, over ${r.sections} section${r.sections === 1 ? "" : "s"}
+        (${r.trains} trains). A timetable trains could keep would be ${Math.abs(r.net)} min ${r.net >= 0 ? "longer, or that much quicker if those sections were fixed" : "shorter"}.${r.where?.length ? ` Where: ${esc(r.where.join("; "))}.` : ""}</small></div>`;
+  };
+  $("yours").innerHTML = (tt.yours || []).length ? tt.yours.map(y => total(route(`${y.from}-${y.to}`), y)).join("")
+    : `<div class="empty">Set your journeys on the Account page to see totals for them.</div>`;
+  $("routes").innerHTML = (tt.routes || []).length ? tt.routes.map(r => total(`${r.from} → ${r.to}`, r)).join("")
+    : `<div class="empty">Building up.</div>`;
+  $("tt").innerHTML = (tt.fixes || []).length ? tt.fixes.map(f => {
+    const [label, c, unit] = TYPES[f.type] || [f.type, "var(--ink-3)", ""];
+    return `<div class="fix" style="--c:${c}"><div class="head"><span class="tag">${esc(label)}</span>
+      <span class="per">${f.per_day} ${esc(unit)}</span>
+      <span class="w">${esc(f.where)}</span></div>
+      <div class="stats">${f.n} runs · planned ${m(f.planned)} · typical ${m(f.median)} · quickest 20% ${m(f.p20)} · slowest 20% ${m(f.p80)}</div>
+      <p>${esc(f.text)}</p>
+      ${(f.split || []).length ? `<div class="split">${f.split.map(x => `<span>${esc(x.cls)}, ${esc(x.when)}: ${m(x.median)} vs ${m(x.planned)} (${x.n})</span>`).join("")}</div>` : ""}</div>`;
+  }).join("") : `<div class="empty">Building up: needs a few days of every train's running.</div>`;
+
+  const pairs = data.operator || [];
+  $("pairs").innerHTML = pairs.length ? pairs.slice(0, 12).map(p => `
+    <div class="fix" style="--c:var(--st-late)"><div class="head"><span class="tag">${p.times}×</span>
+      <span class="per">${lost(p.total_lost)} lost</span>
+      <span class="w">${esc(p.headcode)} (from ${esc(p.leaves)}) ${p.kind === "caught_up" ? `behind ${esc(p.other)}${p.other_kind ? ` (${esc(p.other_kind)})` : ""}` : "held at signals"} near ${esc(p.place)}</span></div>
+      <p>${esc(p.idea)}</p></div>`).join("")
+    : `<div class="empty">Building up: recorded each night for every Chiltern train.</div>`;
+
+  const trains = data.trains || [];
+  $("trains").innerHTML = trains.length ? trains.map(t => `
+    <li><span><b>${esc(t.leaves)}</b> ${esc(route(t.journey))}</span><span class="lost">${lost(t.lost)}</span>
+      <small>Slowed ${t.times} time${t.times === 1 ? "" : "s"} on ${t.days} day${t.days === 1 ? "" : "s"}</small></li>`).join("")
+    : `<li class="empty">None of your trains has been slowed by another yet.</li>`;
+
+  const occ = data.occurrences || [];
+  let lastDay = "";
+  $("occ").innerHTML = occ.length ? occ.map(o => {
+    const head = o.day !== lastDay ? `<li class="day">${esc(day(o.day))}</li>` : "";
+    lastDay = o.day;
+    const other = o.kind === "caught_up"
+      ? `Behind ${esc(o.other)}${o.other_kind ? `, a ${esc(o.other_kind)} train` : ""}${o.other_late ? ` running ${o.other_late > 0 ? `${o.other_late} min late` : `${-o.other_late} min early`}` : ""}`
+        + (o.planned_gap != null ? `. At ${esc(o.point)}: planned ${o.planned_gap} min apart, actually ${o.actual_gap} min.` : ".")
+      : "Held at signals with no train just ahead (a junction or a train crossing its path).";
+    return head + `<li><span><b>${esc(o.leaves)}</b> ${esc(route(o.journey))} · near ${esc(o.place)} · ${clock(o.at)}</span>
+      <span class="lost">${lost(o.lost)}</span><small>${other}</small></li>`;
+  }).join("") : `<li class="empty">Nothing yet.</li>`;
+}
+load();
+</script>
+</body>
+</html>
