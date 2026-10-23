@@ -1,1 +1,1 @@
-{"train_id":"885M60M024","points":[[51.3733,0.08909]],"calls":[],"origin":"Orpington","destination":"Orpington Down Sidings","operator":"Southeastern","operator_code":"SE","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"885M60M024","points":[[51.3733,0.08909]],"calls":[],"origin":"Orpington","destination":"Orpington Down Sidings","operator":"Southeastern","operator_code":"SE","delay_minutes":20,"where":"Left Orpington","cancelled":false,"terminated":false}

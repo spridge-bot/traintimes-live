@@ -1,1 +1,1 @@
-{"train_id":"065J76M024","points":[[55.86219,-4.25146]],"calls":[],"origin":"Glasgow Queen Street","destination":"Breakdown/Recovery Eastfield","operator":"ScotRail","operator_code":"SR","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"065J76M024","points":[[55.86219,-4.25146]],"calls":[],"origin":"Glasgow Queen Street","destination":"Breakdown/Recovery Eastfield","operator":"ScotRail","operator_code":"SR","delay_minutes":0,"where":"Left Cowlairs West Jn","cancelled":false,"terminated":false}

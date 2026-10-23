@@ -1,1 +1,1 @@
-{"train_id":"325M88M024","points":[[53.47736,-2.23091]],"calls":[],"origin":"Manchester Piccadilly","destination":"Wc Longsight Flt Cmd Carr Eng","operator":"CrossCountry","operator_code":"XC","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"325M88M024","points":[[53.47736,-2.23091]],"calls":[],"origin":"Manchester Piccadilly","destination":"Wc Longsight Flt Cmd Carr Eng","operator":"CrossCountry","operator_code":"XC","delay_minutes":7,"where":"Left Manchester Piccadilly","cancelled":false,"terminated":false}

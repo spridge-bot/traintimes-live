@@ -1,1 +1,1 @@
-{"train_id":"735Y59M024","points":[[51.516,-0.17617]],"calls":[],"origin":"London Paddington","destination":"Old Oak Depot","operator":"Elizabeth line","operator_code":"XR","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"735Y59M024","points":[[51.516,-0.17617]],"calls":[],"origin":"London Paddington","destination":"Old Oak Depot","operator":"Elizabeth line","operator_code":"XR","delay_minutes":2,"where":"Left Old Oak Common Arrival Sig","cancelled":false,"terminated":false}
