@@ -1,1 +1,1 @@
-{"train_id":"035K781X24","points":[[56.11206,-3.16703],[56.11206,-3.16703]],"calls":[],"origin":"Kirkcaldy","destination":"Kirkcaldy","operator":"ScotRail","operator_code":"SR","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"035K781X24","points":[[56.11206,-3.16703],[56.11206,-3.16703]],"calls":[],"origin":"Kirkcaldy","destination":"Kirkcaldy","operator":"ScotRail","operator_code":"SR","delay_minutes":20,"where":"Left Kirkcaldy","cancelled":false,"terminated":false}
