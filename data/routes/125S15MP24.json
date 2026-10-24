@@ -1,1 +1,1 @@
-{"train_id":"125S15MP24","points":[[54.9684,-1.61728],[54.9684,-1.61728],[54.9684,-1.61728]],"calls":[],"origin":"Newcastle","destination":"Newcastle","operator":"TransPennine Express","operator_code":"TP","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"125S15MP24","points":[[54.9684,-1.61728],[54.9684,-1.61728],[54.9684,-1.61728]],"calls":[],"origin":"Newcastle","destination":"Newcastle","operator":"TransPennine Express","operator_code":"TP","delay_minutes":2,"where":"Left High Level Bridge Jn","cancelled":false,"terminated":false}
