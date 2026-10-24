@@ -1,1 +1,1 @@
-{"train_id":"745T71MK24","points":[[51.37964,-1.59879],[51.37964,-1.59879]],"calls":[],"origin":"Bedwyn","destination":"Bedwyn","operator":"Great Western Railway","operator_code":"GW","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"745T71MK24","points":[[51.37964,-1.59879],[51.37964,-1.59879]],"calls":[],"origin":"Bedwyn","destination":"Bedwyn","operator":"Great Western Railway","operator_code":"GW","delay_minutes":1,"where":"Left Bedwyn Reversing Siding","cancelled":false,"terminated":false}

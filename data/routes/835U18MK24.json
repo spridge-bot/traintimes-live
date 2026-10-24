@@ -1,1 +1,1 @@
-{"train_id":"835U18MK24","points":[[51.0233,-3.10274],[51.0233,-3.10274]],"calls":[],"origin":"Taunton","destination":"Taunton","operator":"Great Western Railway","operator_code":"GW","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"835U18MK24","points":[[51.0233,-3.10274],[51.0233,-3.10274]],"calls":[],"origin":"Taunton","destination":"Taunton","operator":"Great Western Railway","operator_code":"GW","delay_minutes":1,"where":"Left Taunton","cancelled":false,"terminated":false}
