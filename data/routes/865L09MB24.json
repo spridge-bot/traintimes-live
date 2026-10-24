@@ -1,1 +1,1 @@
-{"train_id":"865L09MB24","points":[[51.07055,-1.80639]],"calls":[],"origin":"Depot","destination":"Salisbury","operator":"South Western Railway","operator_code":"SW","delay_minutes":0,"where":"Left Depot","cancelled":false,"terminated":false}
+{"train_id":"865L09MB24","points":[[51.07055,-1.80639]],"calls":[],"origin":"Depot","destination":"Salisbury","operator":"South Western Railway","operator_code":"SW","delay_minutes":3,"where":"Left Reception Line","cancelled":false,"terminated":false}

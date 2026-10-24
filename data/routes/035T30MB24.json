@@ -1,1 +1,1 @@
-{"train_id":"035T30MB24","points":[[56.55957,-2.58893],[56.55957,-2.58893]],"calls":[],"origin":"Arbroath","destination":"Arbroath","operator":"ScotRail","operator_code":"SR","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"035T30MB24","points":[[56.55957,-2.58893],[56.55957,-2.58893]],"calls":[],"origin":"Arbroath","destination":"Arbroath","operator":"ScotRail","operator_code":"SR","delay_minutes":4,"where":"Left Arbroath","cancelled":false,"terminated":false}
