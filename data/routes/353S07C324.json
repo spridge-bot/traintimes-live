@@ -1,1 +1,1 @@
-{"train_id":"353S07C324","points":[[54.52045,-1.54732],[54.52045,-1.54732]],"calls":[],"origin":"Darlington","destination":"Darlington","operator":"LNER","operator_code":"GR","delay_minutes":0,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"353S07C324","points":[[54.52045,-1.54732],[54.52045,-1.54732]],"calls":[],"origin":"Darlington","destination":"Darlington","operator":"LNER","operator_code":"GR","delay_minutes":5,"where":null,"cancelled":false,"terminated":false}
