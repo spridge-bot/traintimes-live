@@ -1,1 +1,1 @@
-{"train_id":"325H33MY24","points":[[53.47736,-2.23091]],"calls":[],"origin":"Manchester Piccadilly","destination":"Wc Longsight Flt Cmd Carr Eng","operator":"Avanti West Coast","operator_code":"VT","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"325H33MY24","points":[[53.47736,-2.23091]],"calls":[],"origin":"Manchester Piccadilly","destination":"Wc Longsight Flt Cmd Carr Eng","operator":"Avanti West Coast","operator_code":"VT","delay_minutes":4,"where":"Left Manchester Piccadilly","cancelled":false,"terminated":false}

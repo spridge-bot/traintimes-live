@@ -1,1 +1,1 @@
-{"train_id":"625Y461Y24","points":[[52.13619,-0.47944]],"calls":[],"origin":"Bedford","destination":"Bedford Jowett Sdgs","operator":"Thameslink","operator_code":"TL","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"625Y461Y24","points":[[52.13619,-0.47944]],"calls":[],"origin":"Bedford","destination":"Bedford Jowett Sdgs","operator":"Thameslink","operator_code":"TL","delay_minutes":5,"where":"Left Bedford","cancelled":false,"terminated":false}
