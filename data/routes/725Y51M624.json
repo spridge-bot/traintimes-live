@@ -1,1 +1,1 @@
-{"train_id":"725Y51M624","points":[[51.5325,-0.24455],[51.5325,-0.24455]],"calls":[],"origin":"Willesden Junction","destination":"Willesden Junction","operator":"London Overground","operator_code":"LO","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"725Y51M624","points":[[51.5325,-0.24455],[51.5325,-0.24455]],"calls":[],"origin":"Willesden Junction","destination":"Willesden Junction","operator":"London Overground","operator_code":"LO","delay_minutes":8,"where":"Left Willesden Junction","cancelled":false,"terminated":false}
