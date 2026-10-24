@@ -1,1 +1,1 @@
-{"train_id":"815H39MQ24","points":[[51.50494,-2.56243],[51.50494,-2.56243]],"calls":[],"origin":"Filton Abbey Wood","destination":"Filton Abbey Wood","operator":"Great Western Railway","operator_code":"GW","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"815H39MQ24","points":[[51.50494,-2.56243],[51.50494,-2.56243]],"calls":[],"origin":"Filton Abbey Wood","destination":"Filton Abbey Wood","operator":"Great Western Railway","operator_code":"GW","delay_minutes":6,"where":"Left Filton Abbey Wood","cancelled":false,"terminated":false}
