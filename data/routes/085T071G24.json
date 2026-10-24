@@ -1,1 +1,1 @@
-{"train_id":"085T071G24","points":[[55.73889,-4.6745],[55.73889,-4.6745]],"calls":[],"origin":"Glengarnock","destination":"Glengarnock","operator":"ScotRail","operator_code":"SR","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"085T071G24","points":[[55.73889,-4.6745],[55.73889,-4.6745]],"calls":[],"origin":"Glengarnock","destination":"Glengarnock","operator":"ScotRail","operator_code":"SR","delay_minutes":5,"where":"Left Glengarnock","cancelled":false,"terminated":false}
