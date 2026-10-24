@@ -1,1 +1,1 @@
-{"train_id":"845P26MV24","points":[[50.37783,-4.14332]],"calls":[],"origin":"Plymouth","destination":".","operator":"Great Western Railway","operator_code":"GW","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"845P26MV24","points":[[50.37783,-4.14332]],"calls":[],"origin":"Plymouth","destination":".","operator":"Great Western Railway","operator_code":"GW","delay_minutes":10,"where":"At Mount Gould Jn","cancelled":false,"terminated":false}

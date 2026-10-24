@@ -1,1 +1,1 @@
-{"train_id":"235R53MW24","points":[[53.57232,-1.18036],[53.57232,-1.18036]],"calls":[],"origin":"Adwick","destination":"Adwick","operator":"Northern","operator_code":"NT","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"235R53MW24","points":[[53.57232,-1.18036],[53.57232,-1.18036]],"calls":[],"origin":"Adwick","destination":"Adwick","operator":"Northern","operator_code":"NT","delay_minutes":2,"where":"Left Skellow Jn","cancelled":false,"terminated":false}
