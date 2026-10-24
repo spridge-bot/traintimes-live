@@ -1,1 +1,1 @@
-{"train_id":"035B29MO24","points":[[56.7128,-2.47207],[56.7128,-2.47207]],"calls":[],"origin":"Montrose","destination":"Montrose","operator":"ScotRail","operator_code":"SR","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"035B29MO24","points":[[56.7128,-2.47207],[56.7128,-2.47207]],"calls":[],"origin":"Montrose","destination":"Montrose","operator":"ScotRail","operator_code":"SR","delay_minutes":5,"where":"Left Montrose","cancelled":false,"terminated":false}
