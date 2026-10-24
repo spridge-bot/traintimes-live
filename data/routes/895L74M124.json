@@ -1,1 +1,1 @@
-{"train_id":"895L74M124","points":[[51.3408,1.40647]],"calls":[],"origin":"Ramsgate","destination":"Ramsgate Traction Mtnce","operator":"Southeastern","operator_code":"SE","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"895L74M124","points":[[51.3408,1.40647]],"calls":[],"origin":"Ramsgate","destination":"Ramsgate Traction Mtnce","operator":"Southeastern","operator_code":"SE","delay_minutes":1,"where":"At Rm Mk Ext Margate End","cancelled":false,"terminated":false}

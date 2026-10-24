@@ -1,1 +1,1 @@
-{"train_id":"825L73M024","points":[[50.92475,-2.61246]],"calls":[],"origin":"Yeovil Junction","destination":"Yeovil Jn Down Main Sdg","operator":"South Western Railway","operator_code":"SW","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"825L73M024","points":[[50.92475,-2.61246]],"calls":[],"origin":"Yeovil Junction","destination":"Yeovil Jn Down Main Sdg","operator":"South Western Railway","operator_code":"SW","delay_minutes":12,"where":"Left Yeovil Junction","cancelled":false,"terminated":false}
