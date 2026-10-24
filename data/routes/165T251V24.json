@@ -1,1 +1,1 @@
-{"train_id":"165T251V24","points":[[53.78884,-1.32679],[53.78884,-1.32679]],"calls":[],"origin":"Micklefield","destination":"Micklefield","operator":"Northern","operator_code":"NT","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"165T251V24","points":[[53.78884,-1.32679],[53.78884,-1.32679]],"calls":[],"origin":"Micklefield","destination":"Micklefield","operator":"Northern","operator_code":"NT","delay_minutes":1,"where":"Left Micklefield","cancelled":false,"terminated":false}
