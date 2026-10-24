@@ -1,1 +1,1 @@
-{"train_id":"155Z071B24","points":[[54.33307,-1.44127],[54.33307,-1.44127]],"calls":[],"origin":"Northallerton","destination":"Northallerton","operator":"TransPennine Express","operator_code":"TP","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"155Z071B24","points":[[54.33307,-1.44127],[54.33307,-1.44127]],"calls":[],"origin":"Northallerton","destination":"Northallerton","operator":"TransPennine Express","operator_code":"TP","delay_minutes":3,"where":"Left Northallerton","cancelled":false,"terminated":false}
