@@ -1,1 +1,1 @@
-{"train_id":"745L23MF24","points":[[51.7535,-1.27015],[51.7535,-1.27015]],"calls":[],"origin":"Oxford","destination":"Oxford","operator":"Great Western Railway","operator_code":"GW","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"745L23MF24","points":[[51.7535,-1.27015],[51.7535,-1.27015]],"calls":[],"origin":"Oxford","destination":"Oxford","operator":"Great Western Railway","operator_code":"GW","delay_minutes":3,"where":"Left Oxford","cancelled":false,"terminated":false}
