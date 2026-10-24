@@ -1,1 +1,1 @@
-{"train_id":"745L39MN24","points":[[51.7535,-1.27015],[51.7535,-1.27015]],"calls":[],"origin":"Oxford","destination":"Oxford","operator":"Great Western Railway","operator_code":"GW","delay_minutes":13,"where":"At Oxford Carriage Siding 2","cancelled":false,"terminated":false}
+{"train_id":"745L39MN24","points":[[51.7535,-1.27015],[51.7535,-1.27015]],"calls":[],"origin":"Oxford","destination":"Oxford","operator":"Great Western Railway","operator_code":"GW","delay_minutes":0,"where":"Left Oxford Carriage Siding 2","cancelled":false,"terminated":false}
