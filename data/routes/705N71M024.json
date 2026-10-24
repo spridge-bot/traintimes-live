@@ -1,1 +1,1 @@
-{"train_id":"705N71M024","points":[[52.2375,-0.90665]],"calls":[],"origin":"Northampton","destination":"Northampton Riverside Sidings","operator":"West Midlands Trains","operator_code":"LM","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"705N71M024","points":[[52.2375,-0.90665]],"calls":[],"origin":"Northampton","destination":"Northampton Riverside Sidings","operator":"West Midlands Trains","operator_code":"LM","delay_minutes":7,"where":"Left Northampton","cancelled":false,"terminated":false}

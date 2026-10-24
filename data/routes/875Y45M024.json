@@ -1,1 +1,1 @@
-{"train_id":"875Y45M024","points":[[51.5033,-0.11311]],"calls":[],"origin":"London Waterloo","destination":"Clapham Yard Sidings","operator":"South Western Railway","operator_code":"SW","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"875Y45M024","points":[[51.5033,-0.11311]],"calls":[],"origin":"London Waterloo","destination":"Clapham Yard Sidings","operator":"South Western Railway","operator_code":"SW","delay_minutes":2,"where":"Left London Waterloo","cancelled":false,"terminated":false}

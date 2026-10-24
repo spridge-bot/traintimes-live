@@ -1,1 +1,1 @@
-{"train_id":"325W44M024","points":[[53.47736,-2.23091]],"calls":[],"origin":"Manchester Piccadilly","destination":"Ardwick T.M.D","operator":"TransPennine Express","operator_code":"TP","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"325W44M024","points":[[53.47736,-2.23091]],"calls":[],"origin":"Manchester Piccadilly","destination":"Ardwick T.M.D","operator":"TransPennine Express","operator_code":"TP","delay_minutes":30,"where":"Left Manchester Piccadilly","cancelled":false,"terminated":false}
