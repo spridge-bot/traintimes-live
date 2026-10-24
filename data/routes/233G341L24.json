@@ -1,1 +1,1 @@
-{"train_id":"233G341L24","points":[[53.52215,-1.13985],[53.52215,-1.13985]],"calls":[],"origin":"Doncaster","destination":"Doncaster","operator":"LNER","operator_code":"GR","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"233G341L24","points":[[53.52215,-1.13985],[53.52215,-1.13985]],"calls":[],"origin":"Doncaster","destination":"Doncaster","operator":"LNER","operator_code":"GR","delay_minutes":0,"where":"Left Shaftholme Jn","cancelled":false,"terminated":false}
