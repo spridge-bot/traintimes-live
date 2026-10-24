@@ -1,1 +1,1 @@
-{"train_id":"055J81MK24","points":[[56.00261,-3.78505],[56.00261,-3.78505]],"calls":[],"origin":"Falkirk Grahamston","destination":"Falkirk Grahamston","operator":"ScotRail","operator_code":"SR","delay_minutes":null,"where":null,"cancelled":false,"terminated":false}
+{"train_id":"055J81MK24","points":[[56.00261,-3.78505],[56.00261,-3.78505]],"calls":[],"origin":"Falkirk Grahamston","destination":"Falkirk Grahamston","operator":"ScotRail","operator_code":"SR","delay_minutes":4,"where":"Left Falkirk Grahamston","cancelled":false,"terminated":false}
